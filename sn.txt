@@ -1,0 +1,12 @@
+token: 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
+
+Projet de décryptage de mdp: (type John The Ripper)
+    ...
+-> lance un second compileur pour lancer un second programme
+
+Second programme:
+    Jeu:
+        énigmes de cryptage/décryptage
+    But:
+        obtenir la clé de décryptage du pad
+        possibilité d'obtenir la clé à tout moment en cas de frustration
