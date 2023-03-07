@@ -2,7 +2,7 @@ token: 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
 
 Projet de décryptage de mdp: (type John The Ripper)
     ...
--> lance un second compileur pour lancer un second programme
+-> lorsque lancer pour lancer un second programme
 
 Second programme:
     Jeu:
@@ -10,3 +10,16 @@ Second programme:
     But:
         obtenir la clé de décryptage du pad
         possibilité d'obtenir la clé à tout moment en cas de frustration
+
+Jeu:
+
+-- Début
+
+Simulation d'un bureau et d'une console avec quelques commandes
+- exemple:  scan -n network_address -> List[IPAddress]
+            force -n network -h host -> PassWord
+            check -u -p -> Boolean (is_safe)
+            connect -u username -p password -> Client
+
+Si le joueur lance un connect sans faire de check avant, on lance la partie virus
+Sinon, la partie virus a une faible chance de se lancer à chaque connect
