@@ -1,0 +1,4 @@
+scan -n NetworkAddress -> List[IPAddress]
+force -i IPAddress -u str -> str
+check -u str -p str -> Boolean
+connect -u str -p str -> Client
