@@ -22,7 +22,6 @@ def clear():
 
 def initialise():
     """initialisation"""
-    print(WINDOW)
     Application.window = WINDOW
 
     # variables

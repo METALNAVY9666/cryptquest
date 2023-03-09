@@ -1,14 +1,22 @@
 """module de gestion des classes de traitement des données"""
 
-from typing import Callable, Any, Tuple, List
+from typing import Callable, Any, Tuple, List, Dict
 import pygame
 
 
 class Commande:
-    def __init__(self, nom: str, run: Callable[[Any], Any]) -> None:
+
+    commandes_nom_dct: Dict[str, 'Commande'] = {}
+
+    def __init__(self, nom: str, run: Callable[[], Any]) -> None:
         self.nom = nom
         self.run = run
+        Commande.commandes_nom_dct[nom] = self
 
+    @classmethod
+    def found_by_name(cls, nom: str):
+        """renvoie la commande correspondant au nom"""
+        return Commande.commandes_nom_dct[nom]
 
 class Interpreter:
     def __init__(self, texte: 'Texte') -> None:
@@ -26,11 +34,10 @@ class Interpreter:
         # on traite ensuite les différentes commandes
         commande = commande.strip()
         tokens = commande.split(" ")
-        match tokens[0]:
-            case 'cd':
-                self.texte.insert_texte_at('C:')
-            case _:
-                self.texte.insert_texte_at('Commande non reconnue')
+        if tokens[0] in Commande.commandes_nom_dct:
+            Commande.found_by_name(tokens[0]).run()
+        else:
+            self.texte.insert_texte_at('Commande non reconnue')
 
         # saut de ligne de fin d'exécution
         self.texte.newline()
@@ -129,3 +136,12 @@ class Texte:
 
     def get_texte(self) -> str:
         return "".join(self.texte)
+
+
+# constante
+
+COMMANDES = [Commande('test', lambda: print('test1')), Commande('scan', lambda: print('test2')),
+             Commande('force', lambda: print('test3')), Commande('check', lambda: print('test4')),
+             Commande('connect', lambda: print('test5'))]
+
+
