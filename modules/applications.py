@@ -72,7 +72,7 @@ class Shell(Application):
             self.event_press(event)
 
     def event_press(self, event: pygame.event.Event):
-        """événments correspondant à KYEDOWN"""
+        """événements correspondant à KEYDOWN"""
         match event.key:
             case pygame.K_ESCAPE:
                 if self.parent is not None:
@@ -101,6 +101,37 @@ class Shell(Application):
         blit_sequence: Any = self.texte_renderer.texte_wrapper(texte_surfaces)
         Application.window.blits(blit_sequence)
         Application.window.blit(*self.texte_renderer.render_curseur(texte_surfaces))
+
+
+class Game(Application):
+    def __init__(self, icon_nom: str, event_liste: List[int]) -> None:
+        super().__init__(icon_nom, event_liste)
+
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.KEYUP:
+            self.event_press(event)
+
+    def event_press(self, event: pygame.event.Event) -> None:
+        """évènements correspondant à KEYUP"""
+        match event.key:
+            case pygame.K_ESCAPE:
+                if self.parent is not None:
+                    self.parent.get_focus()
+            case pygame.K_BACKSPACE:
+                self.texte_renderer.texte.sup_at()
+            case pygame.K_RETURN:
+                self.interpreter.execute(self.texte_renderer.texte.get_texte())
+                self.texte_renderer.texte.newline()
+                self.add_prefix()
+                self.texte_renderer.texte.register()
+            case _:
+                lettre = event.unicode
+                self.texte_renderer.texte.insert_at(lettre)
+
+    def update(self):
+        """mise à jour"""
+        pass
 
 
 class Desktop(Application):

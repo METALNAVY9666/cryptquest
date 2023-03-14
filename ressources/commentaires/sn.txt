@@ -23,3 +23,4 @@ Simulation d'un bureau et d'une console avec quelques commandes
 
 Si le joueur lance un connect sans faire de check avant, on lance la partie virus
 Sinon, la partie virus a une faible chance de se lancer à chaque connect
+

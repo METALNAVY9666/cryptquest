@@ -1,6 +1,6 @@
 import pygame
 
-from modules.applications import Desktop, Shell, Link, Application
+from modules.applications import Desktop, Shell, Link, Application, Game
 from modules.procesus import Texte, TextRenderer, Interpreter
 
 pygame.init()
@@ -31,9 +31,12 @@ def initialise():
     interpreter = Interpreter(text)
     shell = Shell(texte_renderer, interpreter,
                 'ressources/img/icons/cmd.png', [pygame.KEYDOWN])
+    game = Game('ressources/img/icons/game.png', [pygame.KEYUP])
     bureaux = Desktop('ressources/img/background/desktop.jpg', 'ressources/img/icons/bureaux.png',
                     [Link(shell, 'ressources/img/icons/cmd.png',
-                            (100, 100), 0.35)], [pygame.MOUSEBUTTONDOWN])
+                            (100, 100), 0.35),
+                    Link(game, 'ressources/img/icons/game.png',
+                            (250, 100), 0.17)], [pygame.MOUSEBUTTONDOWN])
     
     Application.current_app = shell
     bureaux.get_focus()
