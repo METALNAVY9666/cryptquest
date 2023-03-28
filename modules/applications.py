@@ -60,7 +60,6 @@ class Shell(Application):
 
         # initialisation de la ligne de commande
         self.add_prefix()
-        self.texte_renderer.texte.register()
 
     def add_prefix(self):
         """ajoute un préfix au début d'une ligne"""
@@ -86,10 +85,9 @@ class Shell(Application):
             case pygame.K_DELETE:
                 self.texte_renderer.texte.vide()
             case pygame.K_RETURN:
-                self.interpreter.execute(self.texte_renderer.texte.get_texte())
+                self.interpreter.execute(self.texte_renderer.texte.texte.split('\n')[-1])
                 self.texte_renderer.texte.newline()
                 self.add_prefix()
-                self.texte_renderer.texte.register()
             case _:
                 lettre = event.unicode
                 self.texte_renderer.texte.insert_at(lettre)
@@ -97,9 +95,9 @@ class Shell(Application):
     def update(self):
         """mise à jour"""
         texte_surfaces = self.texte_renderer.render_texte()
-        blit_sequence: Any = self.texte_renderer.texte_wrapper(texte_surfaces)
+        blit_sequence = self.texte_renderer.texte_wrapper([surf for ls_surf in texte_surfaces for surf in ls_surf])
         Application.window.blits(blit_sequence)
-        Application.window.blit(*self.texte_renderer.render_curseur(texte_surfaces))
+        Application.window.blit(*self.texte_renderer.render_curseur(blit_sequence))
 
 
 class Game(Application):

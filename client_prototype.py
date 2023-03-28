@@ -26,8 +26,8 @@ def initialise():
 
     # variables
 
-    text = Texte(600, POLICE)
-    texte_renderer = TextRenderer(text, (100, 100))
+    text = Texte(600)
+    texte_renderer = TextRenderer(text, POLICE, '#30FF50', (100, 100))
     interpreter = Interpreter(text)
     shell = Shell(texte_renderer, interpreter,
                 'ressources/img/icons/cmd.png', [pygame.KEYDOWN])
