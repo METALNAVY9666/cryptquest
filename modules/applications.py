@@ -1,148 +1,131 @@
-"""module de définition des applications"""
+"""module de gestion des applications"""
 
-from typing import List, Tuple, Any
+from typing import List
 import pygame
+from modules.graphics import Element, StaticElement
 
-from modules import procesus
 
 # classes
 
-class Application:
-    current_app: 'Application'
-    window = pygame.Surface((0, 0))
+class Texte:
+    """classe de représentation d'un texte"""
 
-    def __init__(self, icon_nom: str, event_liste: List[int]) -> None:
-        self.event_liste = event_liste
-        self.icon: pygame.Surface = pygame.image.load(icon_nom)
-        self.parent: None | Application = None
-
-    def get_focus(self):
-        """focus dans l'application"""
-        Application.current_app = self
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        """met à jour correctement le texte selon l'entrée de l'utilisateur"""
-        raise NotImplementedError
-
-    def update(self) -> None:
-        """mise à jour"""
-        raise NotImplementedError
-
-
-class Link:
-    """lien vers une application"""
-
-    def __init__(self, app: Application, icon_nom: str, pos: Tuple[int, int], scale: float = 1) -> None:
-        """constructeur"""
-        self.icon = pygame.transform.scale_by(
-            pygame.image.load(icon_nom), scale)
-        self.rect = self.icon.get_rect()
+    def __init__(self, pos: pygame.Vector3, texte: str, police: pygame.font.Font,
+                 max_width: int, max_lines: int, interface_nom: str | None = None) -> None:
+        self.texte = texte
         self.pos = pos
-        self.app = app
+        self.curseur: int = 0
+        self.max_width = max_width
+        self.max_lines = max_lines
+        self.police = police
 
-    def onclick(self):
-        """action lors du click"""
-        self.app.get_focus()
+        surface = pygame.Surface((0, 0))
+        self.element = Element(self, surface, surface.get_rect(), interface_nom) 
 
-    def render(self):
-        return self.icon, self.pos
+    def avance(self):
+        """avance le curseur"""
+        if self.curseur < len(self.texte):
+            self.curseur += 1
+
+    def recule(self):
+        """recule le curseur"""
+        if self.curseur > 0:
+            self.curseur -= 1
+
+    def on_keypress(self, event: pygame.event.Event):
+        """réagit aux événements claviers"""
+        if event.key == pygame.K_LEFT:
+            self.recule()
+        elif event.key == pygame.K_RIGHT:
+            self.avance()
+        elif event.key == pygame.K_RETURN:
+            self.texte = self.texte[:self.curseur] + '\n' + self.texte[self.curseur:]
+            self.avance()
+        elif event.key == pygame.K_BACKSPACE:
+            self.texte = self.texte[:(self.curseur - 1)] + self.texte[self.curseur:]
+            self.recule()
+        else:
+            self.texte = self.texte[:self.curseur] + event.unicode + self.texte[self.curseur:]
+            self.avance()
+
+    def update(self):
+        """mise à jour de l'objet"""
+        textes = self.texte.split('\n')
+        width_surfaces = [[elm[4] for elm in self.police.metrics(texte)] for texte in textes]
+
+        char_ind_start = 0
+        textures: List[pygame.Surface] = []
+        height = self.police.size(self.texte)[1]
+        curseur_surface = pygame.Surface((2, height))
+        curseur_surface.fill('#FFFFFF')
+
+        curseur_pos = [0, 0]
+
+        curseur_compteur = 0
+        lines_sup = 0
+        
+        # on itère pour toutes les lignes
+        for line, width_surface in enumerate(width_surfaces):
+            somme = 0
+            # on itère pour chaque caractère de la ligne
+            for rang, width in enumerate(width_surface):
+                somme += width
+                curseur_compteur += 1
+                # si la longueur de la ligne dépasse la longueur maximale
+                # on passe à la ligne suivante
+                if somme > self.max_width:
+                    textures.append(self.police.render(textes[line][char_ind_start:rang], True, '#4AF626'))
+                    char_ind_start = rang
+                    somme = width
+                    lines_sup += 1
+
+                # si on a atteint la position du curseur
+                # on sauvegarde sa position
+                if curseur_compteur == self.curseur:
+                    curseur_pos = [somme, (line + lines_sup) * height]
+
+            textures.append(self.police.render(textes[line][char_ind_start:], True, '#4AF626'))
+            char_ind_start = 0
+            curseur_compteur += 1
+            if curseur_compteur == self.curseur:
+                    curseur_pos = [0, (line + lines_sup + 1) * height]
+        
+        surface = pygame.Surface((max(texture.get_width() for texture in textures) + 2,
+                                  self.max_lines * height))
+        
+        # devient vrai lorque le texte a atteint la fin de la zone
+        do_move = len(textures) > self.max_lines
+        for line, texture in enumerate(textures):
+            if do_move:
+                surface.blit(texture, (0, height * (self.max_lines - len(textures) + line)))
+            else:
+                surface.blit(texture, (0, height * line))
+
+        # on place correctement le curseur
+        offset = (len(textures) - self.max_lines) * height
+        if do_move and curseur_pos[1] >= offset:
+            curseur_pos[1] -= offset
+            surface.blit(curseur_surface, curseur_pos)
+        elif do_move:
+            surface.blit(curseur_surface, (0, 0))
+        else:
+            surface.blit(curseur_surface, curseur_pos)
+
+        self.element.surface = surface
+        self.element.rect = surface.get_rect()
 
 
-class Shell(Application):
-    """gestion des shells"""
+class BackGround:
+    """gestion de l'arrière plan"""
 
-    def __init__(self, texte_renderer: 'procesus.TextRenderer', interpreter: 'procesus.Interpreter',
-                 icon_nom: str, event_liste: List[int]) -> None:
-        super().__init__(icon_nom, event_liste)
-        self.texte_renderer = texte_renderer
-        self.interpreter = interpreter
-        self.prefix = "C:/> "
-
-        # initialisation de la ligne de commande
-        self.add_prefix()
-
-    def add_prefix(self):
-        """ajoute un préfix au début d'une ligne"""
-        self.texte_renderer.texte.insert_texte_at(self.prefix)
-
-    def handle_event(self, event: pygame.event.Event):
-        """met à jour correctement le texte selon l'entrée de l'utilisateur"""
-        if event.type == pygame.KEYDOWN:
-            self.event_press(event)
-
-    def event_press(self, event: pygame.event.Event):
-        """événements correspondant à KEYDOWN"""
-        match event.key:
-            case pygame.K_ESCAPE:
-                if self.parent is not None:
-                    self.parent.get_focus()
-            case pygame.K_LEFT:
-                self.texte_renderer.texte.recule_curseur()
-            case pygame.K_RIGHT:
-                self.texte_renderer.texte.avance_curseur()
-            case pygame.K_BACKSPACE:
-                self.texte_renderer.texte.sup_at()
-            case pygame.K_DELETE:
-                self.texte_renderer.texte.vide()
-            case pygame.K_RETURN:
-                self.interpreter.execute(self.texte_renderer.texte.texte.split('\n')[-1])
-                self.texte_renderer.texte.newline()
-                self.add_prefix()
-            case _:
-                lettre = event.unicode
-                self.texte_renderer.texte.insert_at(lettre)
+    def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface, pos: pygame.Vector3 = pygame.Vector3(0, 0, 0),
+                 interface_nom: str | None = None) -> None:
+        self.pos = pos
+        self.surface_of = surface_of
+        self.element = Element(self, surface, surface.get_rect(), interface_nom)
 
     def update(self):
         """mise à jour"""
-        texte_surfaces = self.texte_renderer.render_texte()
-        blit_sequence = self.texte_renderer.texte_wrapper([surf for ls_surf in texte_surfaces for surf in ls_surf])
-        Application.window.blits(blit_sequence)
-        Application.window.blit(*self.texte_renderer.render_curseur(blit_sequence))
-
-
-class Game(Application):
-    def __init__(self, icon_nom: str, event_liste: List[int]) -> None:
-        super().__init__(icon_nom, event_liste)
-
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.KEYUP:
-            self.event_press(event)
-    
-    def event_press(self, event: pygame.event.Event) -> None:
-        """évènements correspondant à KEYUP"""
-        match event.key:
-            case pygame.K_ESCAPE:
-                if self.parent is not None:
-                    self.parent.get_focus()
-            case _:
-                ...
-
-    def update(self):
-        """mise à jour"""
-        pass
-
-
-class Desktop(Application):
-    """gestion des bureaux"""
-
-    def __init__(self, background_nom: str, icon_nom: str, links: List[Link], event_liste: List[int]) -> None:
-        super().__init__(icon_nom, event_liste)
-        self.background = pygame.transform.scale(
-            pygame.image.load(background_nom), Application.window.get_size())
-
-        self.links = links
-        for link in links:
-            link.app.parent = self
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        """gère les événements"""
-        for link in self.links:
-            pos = (event.pos[0] - link.pos[0], event.pos[1] - link.pos[1])
-            if link.rect.collidepoint(pos):
-                link.onclick()
-
-    def update(self) -> None:
-        """met à jour"""
-        Application.window.blit(self.background, (0, 0))
-        Application.window.blits([link.render() for link in self.links])
+        surface = pygame.transform.smoothscale(self.element.surface, self.surface_of.get_size())
+        self.element.surface = surface
+        self.element.rect = surface.get_rect()
