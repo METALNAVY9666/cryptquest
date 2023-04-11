@@ -156,3 +156,15 @@ class KeyBoardListener:
         """écoute le clavier"""
         if event.key in self.binds:
             self.binds[event.key]()
+
+
+class Noeud:
+    """représentation d'un noeud d'un graphe orienté"""
+
+    def __init__(self, children: List['Noeud'], valeur: Any) -> None:
+        self.children = children
+        self.valeur = valeur
+
+    def suivant(self, index: int = 0):
+        """passe au noeud suivant"""
+        return self.children[index]

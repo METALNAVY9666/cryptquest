@@ -2,12 +2,8 @@
 
 from typing import List, Dict, Callable, Any
 import pygame
-<<<<<<< Updated upstream
-from modules.outils import Texte
-=======
-from modules.graphics import Element, StaticElement
-from modules.outils import CrypteurPair
->>>>>>> Stashed changes
+from modules.outils import Texte, Noeud
+from modules.graphics import Bouton
 
 
 # classes
@@ -51,13 +47,19 @@ class Shell:
             self.commandes[commande](*param)
 
 
-class Password:
-    """gestion de la partie mdp avant le jeu"""
+class Dialogue:
+    """classe de gestion des dialogues"""
 
-    def __init__(self) -> None:
-        with open('ressources/files/file.txt') as file:
-            # self.mdp = CrypteurPair.decode_AES(file.readlines()[0])
-            self.mdp = file.readlines()[0]
+    def __init__(self, pos: pygame.Vector3, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
+        self.noeud = noeud
+        self.choix = 0
+        self.texte = Texte(pos, self.noeud.valeur, police, 400, 5, interface_nom)
 
-    def update(self):
-        ...
+        self.bouton = Bouton(pos, pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA), self.next)
+
+    def next(self):
+        """passe au dialogue suivant"""
+        self.noeud = self.noeud.suivant(self.choix)
+        self.texte.texte = self.noeud.valeur
+        self.bouton.element.surface = pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA)
+        self.bouton.element.rect = self.bouton.element.surface.get_rect()

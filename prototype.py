@@ -3,7 +3,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton
-from modules.interactions import Shell, Texte
+from modules.applications import Shell, Texte
 from modules.outils import BackGround, KeyBoardListener
 
 WINDOW = pygame.display.set_mode((1080, 720))
@@ -12,6 +12,11 @@ WINDOW = pygame.display.set_mode((1080, 720))
 # fonctions
 
 def initialisation():
+    # initialisation du mot de passe
+    with open('ressources/files/file.txt') as file:
+            # self.mdp = CrypteurPair.decode_AES(file.readlines()[0])
+            mdp = file.readlines()[0]
+
     Interface.current_interface = Interface('bureau')
     Interface('shell')
     Interface('game')
@@ -36,7 +41,7 @@ def initialisation():
 
     # jeu
     surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
-    surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.5)
+    surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
             lambda: Interface.change_interface('game'))
 
