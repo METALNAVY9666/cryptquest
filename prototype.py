@@ -40,6 +40,8 @@ def initialisation():
     Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
             lambda: Interface.change_interface('game'))
 
+    KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
+
 
 def handle_event(events: List[pygame.event.Event]):
     """gestion des événements"""

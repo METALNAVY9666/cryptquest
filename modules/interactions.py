@@ -2,7 +2,12 @@
 
 from typing import List, Dict, Callable, Any
 import pygame
+<<<<<<< Updated upstream
 from modules.outils import Texte
+=======
+from modules.graphics import Element, StaticElement
+from modules.outils import CrypteurPair
+>>>>>>> Stashed changes
 
 
 # classes
@@ -44,3 +49,15 @@ class Shell:
 
         if commande in self.commandes:
             self.commandes[commande](*param)
+
+
+class Password:
+    """gestion de la partie mdp avant le jeu"""
+
+    def __init__(self) -> None:
+        with open('ressources/files/file.txt') as file:
+            # self.mdp = CrypteurPair.decode_AES(file.readlines()[0])
+            self.mdp = file.readlines()[0]
+
+    def update(self):
+        ...
