@@ -1,6 +1,6 @@
 """module de gestion des applications"""
 
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Any
 import pygame
 from modules.graphics import Element, StaticElement
 
@@ -12,6 +12,8 @@ class Texte:
 
     def __init__(self, pos: pygame.Vector3, texte: str, police: pygame.font.Font,
                  max_width: int, max_lines: int, interface_nom: str | None = None) -> None:
+        self.owner: Any | None = None
+
         self.texte = texte
         self.pos = pos
         self.curseur: int = 0
@@ -23,15 +25,15 @@ class Texte:
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
 
-    def avance(self):
+    def avance(self, k: int = 1):
         """avance le curseur"""
-        if self.curseur < len(self.texte):
-            self.curseur += 1
+        if self.curseur + k <= len(self.texte):
+            self.curseur += k
 
-    def recule(self):
+    def recule(self, k: int = 1):
         """recule le curseur"""
-        if self.curseur > 0:
-            self.curseur -= 1
+        if self.curseur - k >= 0:
+            self.curseur -= k
 
     def on_keypress(self, event: pygame.event.Event):
         """réagit aux événements claviers"""
@@ -51,6 +53,9 @@ class Texte:
             self.texte = self.texte[:self.curseur] + \
                 event.unicode + self.texte[self.curseur:]
             self.avance()
+
+        if self.owner is not None and hasattr(self.owner, 'on_keypress'):
+            self.owner.on_keypress(event)
 
     def update(self):
         """mise à jour de l'objet"""
@@ -152,3 +157,41 @@ class KeyBoardListener:
         """écoute le clavier"""
         if event.key in self.binds:
             self.binds[event.key]()
+
+
+class Shell:
+    """gestion du shell virtuel"""
+
+    def __init__(self, texte: Texte, header: str, commandes: Dict[str, Callable[..., None]]) -> None:
+        self.texte = texte
+        self.header = header
+        self.texte.texte = self.header
+        self.texte.avance(len(self.header))
+        
+        self.commandes = commandes
+        self.texte.owner = self
+
+    def on_keypress(self, event: pygame.event.Event):
+        """réaction clavier"""
+        if event.key == pygame.K_RETURN:
+            self.execute()
+
+    def execute(self):
+        """exécute la ligne de texte comme une commande"""
+        # on traite l'avant dernière ligne
+        line: str = self.texte.texte.split('\n')[-2]
+
+        # on crée le prochain header
+        self.texte.texte += self.header
+        self.texte.avance(len(self.header))
+
+        if not line.startswith(self.header):
+            return
+        raw_line = line[len(self.header):].strip()
+        line_split = raw_line.split(' ')
+
+        commande = line_split[0]
+        param: List[Any] = line_split[1:] if len(line_split) > 1 else []
+
+        if commande in self.commandes:
+            self.commandes[commande](*param)
