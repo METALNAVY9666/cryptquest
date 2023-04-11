@@ -2,7 +2,6 @@
 from typing import List, Any, Tuple, Dict, Callable
 import pygame
 
-from modules.outils import dichotomie
 pygame.init()
 
 
@@ -16,6 +15,29 @@ POLICE = pygame.font.SysFont('Arial', 20)
 def vect2_to_tuple(vecteur: pygame.Vector2):
     """convertie un vecteur2 en tuple d'entier"""
     return round(vecteur.x), round(vecteur.y)
+
+
+def dichotomie(liste: List[float], valeur: float):
+    """effectue une recherche dichotomique et
+    renvoie l'indice s'il existe"""
+
+    if liste == []:
+        return 0
+
+    start = 0
+    end = len(liste) - 1
+
+    while end - start > 0:
+        mid = (start + end) // 2
+        if liste[mid] == valeur:
+            return mid
+        elif liste[mid] > valeur:
+            end = mid
+        else:
+            start = mid + 1
+    
+    return start + 1 if valeur > liste[start] else start
+
 
 # classes
 

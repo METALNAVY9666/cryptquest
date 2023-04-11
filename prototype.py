@@ -1,8 +1,10 @@
 """module de prototypage"""
+
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton
-from modules.interactions import Shell, Texte, BackGround, KeyBoardListener
+from modules.interactions import Shell, Texte
+from modules.outils import BackGround, KeyBoardListener
 
 WINDOW = pygame.display.set_mode((1080, 720))
 
@@ -28,7 +30,9 @@ def initialisation():
            lambda: Interface.change_interface('shell'), interface_nom='bureau')
     texte = Texte(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
     Shell(texte, r"C:\Users>", {'ls': lambda: print('hi')})
+
     KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
+    KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
 
     # jeu
     surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
