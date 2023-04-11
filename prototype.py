@@ -2,7 +2,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton
-from modules.applications import Texte, BackGround
+from modules.interactions import Texte, BackGround, KeyBoardListener
 
 WINDOW = pygame.display.set_mode((1080, 720))
 
@@ -20,7 +20,8 @@ def initialisation():
 
     # shell
     surface_shell_icon = pygame.image.load('ressources/img/icons/cmd.png')
-    surface_shell_icon = pygame.transform.smoothscale_by(surface_shell_icon, 0.5)
+    surface_shell_icon = pygame.transform.smoothscale_by(surface_shell_icon, 0.4)
+    KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
     Bouton(pygame.Vector3(100, 100, 1), surface_shell_icon,
            lambda: Interface.change_interface('shell'), interface_nom='bureau')
     Texte(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')

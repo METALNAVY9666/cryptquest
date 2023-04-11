@@ -1,6 +1,6 @@
 import pygame
 
-from modules.applications import Desktop, Shell, Link, Application, Game
+from modules.interactions import Desktop, Shell, Link, Application, Game
 from modules.procesus import Texte, TextRenderer, Interpreter
 
 pygame.init()
