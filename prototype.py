@@ -12,6 +12,7 @@ WINDOW = pygame.display.set_mode((1080, 720))
 def initialisation():
     Interface.current_interface = Interface('bureau')
     Interface('shell')
+    Interface('game')
 
     # image de fond
     surface = pygame.image.load('ressources/img/background/desktop.jpg')
@@ -28,6 +29,12 @@ def initialisation():
     texte = Texte(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
     Shell(texte, r"C:\Users>", {'ls': lambda: print('hi')})
     KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
+
+    # jeu
+    surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
+    surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.5)
+    Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
+            lambda: Interface.change_interface('game'))
 
 
 def handle_event(events: List[pygame.event.Event]):
