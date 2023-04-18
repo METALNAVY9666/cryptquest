@@ -170,16 +170,24 @@ class Element:
         """délie l'élément"""
         self.interface.remove_element(self)
 
-    def ancre(self, ancre: str = 'topleft'):
+    def ancre(self):
         """ancre le rectangle à la bonne position"""
-        # cas où l'élément n'est pas encore binder
-        if not hasattr(self, 'objet'):
-            return
 
         self.pos: pygame.Vector3 = self.objet.pos
+        ancre = 'topleft'
+
+        if isinstance(self.pos, RelativePos):
+            ancre = self.pos.aligne
+
         match ancre:
-            case 'centre':
-                self.rect.center = vect2_to_tuple(self.pos.xy)
+            case 'top':
+                self.rect.centerx, self.rect.top = vect2_to_tuple(self.pos.xy)
+            case 'bottom':
+                self.rect.centerx, self.rect.bottom = vect2_to_tuple(self.pos.xy)
+            case 'left':
+                self.rect.left, self.rect.centery = vect2_to_tuple(self.pos.xy)
+            case 'right':
+                self.rect.right, self.rect.centery = vect2_to_tuple(self.pos.xy)
             case _:
                 self.rect.topleft = vect2_to_tuple(self.pos.xy)
 
@@ -187,9 +195,7 @@ class Element:
         """methode de mise à jour"""
         if isinstance(self.pos, RelativePos):
             self.pos.update()
-            self.ancre('centre')
-        else:
-            self.ancre()
+        self.ancre()
 
         if hasattr(self, 'objet') and hasattr(self.objet, 'rotation'):
             # en degrés
@@ -239,12 +245,13 @@ class RelativePos:
     """
     window: pygame.Surface
 
-    def __init__(self, relx: float, rely: float, posz: int) -> None:
+    def __init__(self, relx: float, rely: float, posz: int, aligne: str = 'centre') -> None:
         self.relx, self.rely = relx, rely
         self.x: float
         self.y: float
         self.xy: pygame.Vector2
         self.z = posz
+        self.aligne = aligne
         self.update()
 
     def update(self):
@@ -333,5 +340,22 @@ class Bouton:
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
+        print('test')
         if self.element.rect.collidepoint(event.pos) and self.click == event.button:
             self.fnct()
+
+
+class Texte:
+    """gestion des textes"""
+
+    def __init__(self, pos: pygame.Vector3 | RelativePos, police: pygame.font.Font, color: str, texte: str = "", interface_nom: str | None = None) -> None:
+        self.texte = texte
+        self.pos = pos
+        self.police, self.color = police, color
+        surface = police.render(self.texte, True, color)
+        self.element = Element(self, surface, surface.get_rect(), interface_nom)
+
+    def update(self):
+        """fonction de mise à jour"""
+        self.element.surface = self.police.render(self.texte, True, self.color)
+        self.element.rect = self.element.surface.get_rect()

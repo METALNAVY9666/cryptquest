@@ -6,7 +6,7 @@ import pygame
 
 # classe
 
-class Texte:
+class Editeur:
     """classe de représentation d'un texte"""
 
     def __init__(self, pos: pygame.Vector3, texte: str, police: pygame.font.Font,
@@ -161,10 +161,10 @@ class KeyBoardListener:
 class Noeud:
     """représentation d'un noeud d'un graphe orienté"""
 
-    def __init__(self, children: List['Noeud'], valeur: Any) -> None:
+    def __init__(self, children: List['Noeud | None'], valeur: Any) -> None:
         self.children = children
         self.valeur = valeur
 
     def suivant(self, index: int = 0):
         """passe au noeud suivant"""
-        return self.children[index]
+        return self.children[index] if len(self.children) > 0 else None

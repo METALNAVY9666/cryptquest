@@ -2,11 +2,12 @@
 
 from typing import List
 import pygame
-from modules.graphics import POLICE, Interface, Bouton
-from modules.applications import Shell, Texte
-from modules.outils import BackGround, KeyBoardListener
+from modules.graphics import POLICE, Interface, Bouton, RelativePos
+from modules.applications import Shell, Dialogue
+from modules.outils import BackGround, KeyBoardListener, Noeud, Editeur
 
 WINDOW = pygame.display.set_mode((1080, 720))
+RelativePos.window = WINDOW
 
 
 # fonctions
@@ -33,7 +34,7 @@ def initialisation():
 
     Bouton(pygame.Vector3(100, 100, 1), surface_shell_icon,
            lambda: Interface.change_interface('shell'), interface_nom='bureau')
-    texte = Texte(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
+    texte = Editeur(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
     Shell(texte, r"C:\Users>", {'ls': lambda: print('hi')})
 
     KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
@@ -46,6 +47,9 @@ def initialisation():
             lambda: Interface.change_interface('game'))
 
     KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
+
+    noeud = Noeud([], 'suite')
+    Dialogue(RelativePos(0.5, 0, 1, aligne='top'), Noeud([noeud], 'test'), POLICE, 'game')
 
 
 def handle_event(events: List[pygame.event.Event]):

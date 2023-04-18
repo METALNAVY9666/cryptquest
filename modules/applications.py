@@ -2,8 +2,8 @@
 
 from typing import List, Dict, Callable, Any
 import pygame
-from modules.outils import Texte, Noeud
-from modules.graphics import Bouton
+from modules.outils import Noeud, Editeur
+from modules.graphics import Bouton, RelativePos, Texte
 
 
 # classes
@@ -12,12 +12,12 @@ from modules.graphics import Bouton
 class Shell:
     """gestion du shell virtuel"""
 
-    def __init__(self, texte: Texte, header: str, commandes: Dict[str, Callable[..., None]]) -> None:
+    def __init__(self, texte: Editeur, header: str, commandes: Dict[str, Callable[..., None]]) -> None:
         self.texte = texte
         self.header = header
         self.texte.texte = self.header
         self.texte.avance(len(self.header))
-        
+
         self.commandes = commandes
         self.texte.owner = self
 
@@ -50,16 +50,23 @@ class Shell:
 class Dialogue:
     """classe de gestion des dialogues"""
 
-    def __init__(self, pos: pygame.Vector3, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
+    def __init__(self, pos: pygame.Vector3 | RelativePos, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
         self.noeud = noeud
         self.choix = 0
-        self.texte = Texte(pos, self.noeud.valeur, police, 400, 5, interface_nom)
+        self.texte = Texte(pos, police, '#FFFFFF',
+                           self.noeud.valeur, interface_nom)
 
-        self.bouton = Bouton(pos, pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA), self.next)
+        self.bouton = Bouton(pos, pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA),
+                             self.next, interface_nom=interface_nom)
 
     def next(self):
         """passe au dialogue suivant"""
-        self.noeud = self.noeud.suivant(self.choix)
-        self.texte.texte = self.noeud.valeur
-        self.bouton.element.surface = pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA)
+        temp = self.noeud.suivant(self.choix)
+
+        if temp is not None:
+            self.noeud = temp
+            self.texte.texte = self.noeud.valeur
+
+        self.bouton.element.surface = pygame.Surface(
+            self.texte.element.surface.get_size(), pygame.SRCALPHA)
         self.bouton.element.rect = self.bouton.element.surface.get_rect()
