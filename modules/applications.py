@@ -1,6 +1,8 @@
 """module de gestion des applications"""
 
-from typing import List, Dict, Callable, Any
+from typing import List, Dict, Callable, Any, TextIO
+import json
+
 import pygame
 from modules.outils import Noeud, Editeur
 from modules.graphics import Bouton, RelativePos, Texte
@@ -70,3 +72,21 @@ class Dialogue:
         self.bouton.element.surface = pygame.Surface(
             self.texte.element.surface.get_size(), pygame.SRCALPHA)
         self.bouton.element.rect = self.bouton.element.surface.get_rect()
+
+# fonctions
+
+def load_noeud(dialogue_file: TextIO):
+    """charge les noeuds de dialogues"""
+    dialogue_dct: Dict[str, Dict[str, Any]] = json.load(dialogue_file)
+
+    # créations des noeuds
+
+    for nom, valeur in dialogue_dct["noeuds"].items():
+        Noeud(valeur, nom)
+
+    # relations entre les noeuds
+
+    for nom, relations in dialogue_dct['relations'].items():
+        noeud = Noeud.get_by_nom(nom)
+        noeud.set_enfant(relations['end'])
+        noeud.set_mode(relations['type'])

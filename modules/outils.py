@@ -1,8 +1,10 @@
 """module outils"""
-from typing import List, Any, Dict, Callable
-from modules.graphics import Element, StaticElement
+from typing import Any, Callable, Dict, List
+import random
+
 import pygame
 
+from modules.graphics import Element, StaticElement
 
 # classe
 
@@ -145,7 +147,7 @@ class BackGround:
 
 
 class KeyBoardListener:
-    """écoute les événements lcaviers"""
+    """écoute les événements claviers"""
 
     def __init__(self, binds: Dict[int, Callable[[], None]], interface_nom: str) -> None:
         self.pos = pygame.Vector3(0, 0, 0)
@@ -160,11 +162,38 @@ class KeyBoardListener:
 
 class Noeud:
     """représentation d'un noeud d'un graphe orienté"""
+    noeuds: Dict[str, 'Noeud'] = {}
 
-    def __init__(self, children: List['Noeud | None'], valeur: Any) -> None:
-        self.children = children
+    def __init__(self, valeur: Any, nom: str) -> None:
         self.valeur = valeur
+        self.children: List[str] = []
+        self.nom = nom
+        self.mode = 'exact'
+
+        Noeud.noeuds[nom] = self
+
+    def set_enfant(self, enfants: List['str']):
+        """enfants du noeud"""
+        self.children = enfants[:]
+
+    def set_mode(self, mode: str):
+        """change le mode de sélection du noeud suivant"""
+        self.mode = mode
 
     def suivant(self, index: int = 0):
         """passe au noeud suivant"""
-        return self.children[index] if len(self.children) > 0 else None
+        match self.mode:
+            case 'exact':
+                index = 0
+            case 'random':
+                index = random.randint(0, len(self.children) - 1)
+            case _:
+                ...
+
+        return Noeud.noeuds[self.children[index]] if len(self.children) > 0 else None
+
+    @classmethod
+    def get_by_nom(cls, nom: str):
+        """renvoie le noeud correspondant au nom"""
+        # erreur intentionnelle
+        return cls.noeuds[nom]

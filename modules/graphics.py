@@ -125,7 +125,7 @@ class Interface:
 
     def update(self):
         for elm in self.elements:
-            if hasattr(elm, 'objet') and hasattr(elm.objet, 'update'):
+            if hasattr(elm.objet, 'update'):
                 elm.objet.update()
             if hasattr(elm, 'update'):
                 elm.update()
@@ -340,7 +340,6 @@ class Bouton:
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
-        print('test')
         if self.element.rect.collidepoint(event.pos) and self.click == event.button:
             self.fnct()
 

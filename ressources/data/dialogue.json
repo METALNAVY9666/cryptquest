@@ -1,0 +1,29 @@
+{
+    "noeuds": {
+        "A": "Vite, il faut sécuriser ce qu'on peut des fichiers de l'ordinateur ",
+        "B": "Commençons par les fichiers personnels",
+        "C": "Commençons par les fichiers critiques",
+        "D": "Mince, il va falloir passer la sécurité"
+    },
+    "relations": {
+        "A": {
+            "type": "random",
+            "end": [
+                "B",
+                "C"
+            ]
+        },
+        "B": {
+            "type": "random",
+            "end": [
+                "D"
+            ]
+        },
+        "C": {
+            "type": "exact",
+            "end": [
+                "D"
+            ]
+        }
+    }
+}

@@ -3,7 +3,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos
-from modules.applications import Shell, Dialogue
+from modules.applications import Shell, Dialogue, load_noeud
 from modules.outils import BackGround, KeyBoardListener, Noeud, Editeur
 
 WINDOW = pygame.display.set_mode((1080, 720))
@@ -45,11 +45,12 @@ def initialisation():
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
             lambda: Interface.change_interface('game'))
+    
+    # dialogues
+    with open('ressources/data/dialogue.json', 'r', encoding="utf-8") as fichier:
+        load_noeud(fichier)
 
-    KeyBoardListener({pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
-
-    noeud = Noeud([], 'suite')
-    Dialogue(RelativePos(0.5, 0, 1, aligne='top'), Noeud([noeud], 'test'), POLICE, 'game')
+    Dialogue(RelativePos(0.5, 0, 1, aligne='top'), Noeud.get_by_nom('A'), POLICE, 'game')
 
 
 def handle_event(events: List[pygame.event.Event]):
