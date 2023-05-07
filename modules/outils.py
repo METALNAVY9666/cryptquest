@@ -6,6 +6,47 @@ import pygame
 
 from modules.graphics import Element, StaticElement
 
+# système observeur
+
+evenement: Dict[str, List[Callable[..., None]]] = {}
+
+
+def lie(fnct: Callable[..., None], nom: str):
+    """lie une fonction à un événement"""
+    if nom in evenement:
+        evenement[nom].append(fnct)
+    else:
+        evenement[nom] = [fnct]
+
+
+def delie(fnct: Callable[..., None], nom: str):
+    """délie une fonction d'un événement"""
+    if nom in evenement and fnct in evenement[nom]:
+        evenement[nom].remove(fnct)
+
+
+def vide(nom: str):
+    """detruit un événement"""
+    if nom in evenement:
+        del evenement[nom]
+
+
+def appel(nom: str, data: Dict[str, Any]):
+    """appelle les fonctions associées"""
+
+    if not nom in evenement:
+        return
+    
+    for fnct in evenement[nom]:
+        fnct(**data)
+
+
+def set_dct(valeur: Any, clef: str, dct: Dict[str, Any]):
+    """change la valeur de la clef"""
+    if clef in dct:
+        dct[clef] = valeur
+
+
 # classe
 
 class Editeur:
@@ -125,8 +166,8 @@ class Editeur:
         else:
             surface.blit(curseur_surface, curseur_pos)
 
-        self.element.surface = surface
-        self.element.rect = surface.get_rect()
+        self.element.elm_infos["surface"] = surface
+        self.element.elm_infos["rect"] = surface.get_rect()
 
 
 class BackGround:
@@ -141,9 +182,9 @@ class BackGround:
     def update(self):
         """mise à jour"""
         surface = pygame.transform.smoothscale(
-            self.element.surface, self.surface_of.get_size())
-        self.element.surface = surface
-        self.element.rect = surface.get_rect()
+            self.element.elm_infos["surface"], self.surface_of.get_size())
+        self.element.elm_infos["surface"] = surface
+        self.element.elm_infos["rect"] = surface.get_rect()
 
 
 class KeyBoardListener:
@@ -152,7 +193,8 @@ class KeyBoardListener:
     def __init__(self, binds: Dict[int, Callable[[], None]], interface_nom: str) -> None:
         self.pos = pygame.Vector3(0, 0, 0)
         self.binds = binds
-        self.element = Element(self, pygame.Surface((0, 0)), pygame.Rect(0, 0, 0, 0 ), interface_nom)
+        self.element = Element(self, pygame.Surface(
+            (0, 0)), pygame.Rect(0, 0, 0, 0), interface_nom)
 
     def on_keypress(self, event: pygame.event.Event):
         """écoute le clavier"""
@@ -170,23 +212,34 @@ class Noeud:
         self.nom = nom
         self.mode = 'exact'
 
+        self.prerequis: Dict[str, bool] = {}
+
         Noeud.noeuds[nom] = self
 
     def set_enfant(self, enfants: List['str']):
         """enfants du noeud"""
         self.children = enfants[:]
 
-    def set_mode(self, mode: str):
+    def set_mode(self, mode: str, prerequis: List[str]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
+        for nom in prerequis:
+            self.prerequis[nom] = False
+            lie(lambda **_: set_dct(True, nom, self.prerequis), nom)
+
     def suivant(self, index: int = 0):
         """passe au noeud suivant"""
+        if not all(self.prerequis.values()):
+            return
+
         match self.mode:
             case 'exact':
                 index = 0
             case 'random':
                 index = random.randint(0, len(self.children) - 1)
+            case 'joueur':
+                ...
             case _:
                 ...
 

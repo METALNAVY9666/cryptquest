@@ -17,12 +17,18 @@
             "type": "random",
             "end": [
                 "D"
+            ],
+            "prerequis": [
+                "test"
             ]
         },
         "C": {
             "type": "exact",
             "end": [
                 "D"
+            ],
+            "prerequis": [
+                "test"
             ]
         }
     }

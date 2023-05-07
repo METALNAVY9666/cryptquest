@@ -58,7 +58,7 @@ class Dialogue:
         self.texte = Texte(pos, police, '#FFFFFF',
                            self.noeud.valeur, interface_nom)
 
-        self.bouton = Bouton(pos, pygame.Surface(self.texte.element.surface.get_size(), pygame.SRCALPHA),
+        self.bouton = Bouton(pos, pygame.Surface(self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA),
                              self.next, interface_nom=interface_nom)
 
     def next(self):
@@ -69,9 +69,9 @@ class Dialogue:
             self.noeud = temp
             self.texte.texte = self.noeud.valeur
 
-        self.bouton.element.surface = pygame.Surface(
-            self.texte.element.surface.get_size(), pygame.SRCALPHA)
-        self.bouton.element.rect = self.bouton.element.surface.get_rect()
+        self.bouton.element.elm_infos["surface"] = pygame.Surface(
+            self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA)
+        self.bouton.element.elm_infos["rect"] = self.bouton.element.elm_infos["surface"].get_rect()
 
 # fonctions
 
@@ -89,4 +89,5 @@ def load_noeud(dialogue_file: TextIO):
     for nom, relations in dialogue_dct['relations'].items():
         noeud = Noeud.get_by_nom(nom)
         noeud.set_enfant(relations['end'])
-        noeud.set_mode(relations['type'])
+        prerequis: List[str] = relations["prerequis"] if "prerequis" in relations else []
+        noeud.set_mode(relations['type'], prerequis)

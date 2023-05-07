@@ -35,7 +35,7 @@ def dichotomie(liste: List[float], valeur: float):
             end = mid
         else:
             start = mid + 1
-    
+
     return start + 1 if valeur > liste[start] else start
 
 
@@ -45,48 +45,76 @@ def dichotomie(liste: List[float], valeur: float):
 class Sequence:
     """classe de gestion des séquences"""
 
-    def __init__(self, seq: List[Tuple[Tuple[Callable[..., None], List[Any]] | None, float]],
-                 last_call: Tuple[Callable[..., None], List[Any]] = (lambda: None, []), loop: bool = False) -> None:
+    sequences: List['Sequence']
 
-        self.fnct: List[Tuple[Callable[..., None], List[Any]] | None] = []
-        self.times: List[float] = []
-        self.is_running = False
-        self.sqc_timer = pygame.time.get_ticks()
-        self.pointer = 0
-        self.loop = loop
+    def __init__(self, seq: List[Tuple[Tuple[Callable[..., None], List[Any]] | None, float]],
+                 loop: bool = False, local: bool = False) -> None:
+        
+        self.seq_infos: Dict[str, Any] = {
+            "fnct": [],
+            "times": [],
+            "is_running": False,
+            "sqc_timer": pygame.time.get_ticks(),
+            "pointer": 0,
+            "loop": loop,
+            "local": local
+        }
+
+        if self.seq_infos['local'] and not self.seq_infos['loop']:
+            Sequence.sequences.append(self)
 
         for elm in seq:
-            self.fnct.append(elm[0])
-            self.times.append(elm[1])
+            self.seq_infos['fnct'].append(elm[0])
+            self.seq_infos['times'].append(elm[1])
 
     def start(self):
         """commence la séquence"""
-        self.is_running = True
-        self.pointer = 0
-        self.sqc_timer = pygame.time.get_ticks()
+        self.seq_infos['is_running'] = True
+        self.seq_infos['pointer'] = 0
+        self.seq_infos['seq_timer'] = pygame.time.get_ticks()
 
     def fin(self):
         """met fin à la séquence"""
-        self.is_running = False
+        self.seq_infos['running'] = False
 
     def update(self):
         """met à jour la séquence"""
-        if not self.is_running or (self.times[self.pointer] >
-                                   pygame.time.get_ticks() - self.sqc_timer):
+        if not self.seq_infos["is_running"] or (self.seq_infos['times'][self.seq_infos['pointer']] >
+                                   pygame.time.get_ticks() - self.seq_infos["sqc_timer"]):
             return False
 
-        fnct = self.fnct[self.pointer]
+        fnct = self.seq_infos['fnct'][self.seq_infos['pointer']]
         if fnct is not None:
             fnct[0](*fnct[1])
-        self.pointer += 1
-        self.sqc_timer = pygame.time.get_ticks()
+        self.seq_infos["pointer"] += 1
+        self.seq_infos['sqc_timer'] = pygame.time.get_ticks()
 
-        if self.pointer >= len(self.times):
-            if self.loop:
+        if self.seq_infos["pointer"] >= len(self.seq_infos['pointer']):
+            if self.seq_infos["loop"]:
                 self.start()
             else:
-                self.is_running = False
+                self.seq_infos["is_running"] = False
         return True
+
+    @classmethod
+    def local_update(cls):
+        """met à jour les séquences locales"""
+        for seq in cls.sequences:
+            seq.update()
+
+        ind = 0
+        while ind < len(Sequence.sequences):
+            seq = Sequence.sequences[ind]
+            if seq.seq_infos["pointer"] >= len(seq.seq_infos["times"]):
+                seq.destroy()
+            else:
+                ind += 1
+
+    def destroy(self):
+        """détruit la séquence"""
+        if self in Sequence.sequences:
+            Sequence.sequences.remove(self)
+        del self
 
 
 class Interface:
@@ -105,7 +133,7 @@ class Interface:
         index: int = dichotomie(
             [elm.pos.z for elm in self.elements], element.pos.z)
         self.elements.insert(index, element)
-        element.interface = self
+        element.elm_infos["interface"] = self
 
     def remove_element(self, element: 'Element'):
         """retire un élément de la liste"""
@@ -114,19 +142,19 @@ class Interface:
     def on_keypress(self, event: pygame.event.Event):
         """gère les touches appuyées"""
         for elm in self.elements:
-            if hasattr(elm.objet, 'on_keypress'):
-                elm.objet.on_keypress(event)
+            if hasattr(elm.elm_infos["objet"], 'on_keypress'):
+                elm.elm_infos["objet"].on_keypress(event)
 
     def on_click(self, event: pygame.event.Event):
         """gestion des cliques"""
         for elm in self.elements:
-            if hasattr(elm.objet, 'on_click'):
-                elm.objet.on_click(event)
+            if hasattr(elm.elm_infos["objet"], 'on_click'):
+                elm.elm_infos["objet"].on_click(event)
 
     def update(self):
         for elm in self.elements:
-            if hasattr(elm.objet, 'update'):
-                elm.objet.update()
+            if hasattr(elm.elm_infos["objet"], 'update'):
+                elm.elm_infos["objet"].update()
             if hasattr(elm, 'update'):
                 elm.update()
 
@@ -154,12 +182,16 @@ class Element:
 
     def __init__(self, objet: Any, surface: pygame.Surface, rectangle: pygame.Rect,
                  interface_nom: str | None = None) -> None:
-        self.surface = surface
-        self.rect = rectangle
-        self.objet = objet
+        
+        self.elm_infos: Dict[str, Any] = {
+            "surface": surface,
+            "rect": rectangle,
+            "objet": objet,
+            "interface": None
+        }
+
         self.backup_rotation = 0
-        self.pos: pygame.Vector3 = self.objet.pos
-        self.interface: Interface
+        self.pos: pygame.Vector3 = self.elm_infos["objet"].pos
 
         if interface_nom is None:
             Interface.current_interface.add_element(self)
@@ -168,28 +200,26 @@ class Element:
 
     def delink(self):
         """délie l'élément"""
-        self.interface.remove_element(self)
+        self.elm_infos["interface"].remove_element(self)
 
     def ancre(self):
         """ancre le rectangle à la bonne position"""
 
-        self.pos: pygame.Vector3 = self.objet.pos
+        self.pos: pygame.Vector3 | RelativePos = self.elm_infos['objet'].pos
         ancre = 'topleft'
 
         if isinstance(self.pos, RelativePos):
             ancre = self.pos.aligne
 
-        match ancre:
-            case 'top':
-                self.rect.centerx, self.rect.top = vect2_to_tuple(self.pos.xy)
-            case 'bottom':
-                self.rect.centerx, self.rect.bottom = vect2_to_tuple(self.pos.xy)
-            case 'left':
-                self.rect.left, self.rect.centery = vect2_to_tuple(self.pos.xy)
-            case 'right':
-                self.rect.right, self.rect.centery = vect2_to_tuple(self.pos.xy)
-            case _:
-                self.rect.topleft = vect2_to_tuple(self.pos.xy)
+        self.elm_infos['rect'].center = vect2_to_tuple(self.pos.xy)
+        if 'top' in ancre:
+            self.elm_infos['rect'].top = vect2_to_tuple(self.pos.xy)[1]
+        elif 'bottom' in ancre:
+            self.elm_infos['rect'].bottom = vect2_to_tuple(self.pos.xy)[1]
+        if 'left' in ancre:
+            self.elm_infos['rect'].left = vect2_to_tuple(self.pos.xy)[0]
+        elif 'right' in ancre:
+            self.elm_infos['rect'].right = vect2_to_tuple(self.pos.xy)[0]
 
     def update(self):
         """methode de mise à jour"""
@@ -197,15 +227,15 @@ class Element:
             self.pos.update()
         self.ancre()
 
-        if hasattr(self, 'objet') and hasattr(self.objet, 'rotation'):
+        if "objet" in self.elm_infos and hasattr(self.elm_infos["objet"], 'rotation'):
             # en degrés
-            self.surface = pygame.transform.rotate(
-                self.surface, self.objet.rotation - self.backup_rotation)
-            self.backup_rotation = self.objet.rotation
+            self.elm_infos["surface"] = pygame.transform.rotate(
+                self.elm_infos["surface"], self.elm_infos["objet"].rotation - self.backup_rotation)
+            self.backup_rotation = self.elm_infos["objet"].rotation
 
     def render(self):
         """méthode d'affichage"""
-        return self.surface, self.rect
+        return self.elm_infos["surface"], self.elm_infos["rect"]
 
 
 class Frame:
@@ -249,17 +279,19 @@ class RelativePos:
         self.relx, self.rely = relx, rely
         self.x: float
         self.y: float
-        self.xy: pygame.Vector2
         self.z = posz
         self.aligne = aligne
         self.update()
+
+    @property
+    def xy(self):
+        """renvoie les composantes xy du vecteur position"""
+        return pygame.Vector2(self.x, self.y)
 
     def update(self):
         """méthode de mise à jour"""
         self.x = self.relx * RelativePos.window.get_width()
         self.y = self.rely * RelativePos.window.get_height()
-
-        self.xy = pygame.Vector2(self.x, self.y)
 
 
 class StaticElement(Element):
@@ -271,7 +303,7 @@ class StaticElement(Element):
 
     def update(self):
         """surécrit la méthode pour la désactiver"""
-        ...
+        return
 
 
 class AnimElement(Element):
@@ -309,7 +341,7 @@ class AnimElement(Element):
         """si le temps lié à l'animation est écoulé,
         passe à la texture suivante"""
         change = False
-        if self.seq.is_running:
+        if self.seq.seq_infos["is_running"]:
             change = self.seq.update()
         else:
             change = self.current_texture != self.default_texture
@@ -320,9 +352,9 @@ class AnimElement(Element):
         """méthode de mise à jour"""
         texture, change = self.check_next_anim()
         if change:
-            self.surface = texture
+            self.elm_infos["surface"] = texture
             self.backup_rotation = 0
-            self.rect = texture.get_rect()
+            self.elm_infos["rect"] = texture.get_rect()
 
         super().update()
 
@@ -340,7 +372,7 @@ class Bouton:
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
-        if self.element.rect.collidepoint(event.pos) and self.click == event.button:
+        if self.element.elm_infos["rect"].collidepoint(event.pos) and self.click == event.button:
             self.fnct()
 
 
@@ -352,9 +384,10 @@ class Texte:
         self.pos = pos
         self.police, self.color = police, color
         surface = police.render(self.texte, True, color)
-        self.element = Element(self, surface, surface.get_rect(), interface_nom)
+        self.element = Element(
+            self, surface, surface.get_rect(), interface_nom)
 
     def update(self):
         """fonction de mise à jour"""
-        self.element.surface = self.police.render(self.texte, True, self.color)
-        self.element.rect = self.element.surface.get_rect()
+        self.element.elm_infos["surface"] = self.police.render(self.texte, True, self.color)
+        self.element.elm_infos["rect"] = self.element.elm_infos["surface"].get_rect()
