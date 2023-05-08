@@ -3,7 +3,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos
-from modules.applications import Shell, Dialogue, load_noeud
+from modules.applications import Shell, Dialogue, load_dialogue
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
@@ -51,7 +51,9 @@ def initialisation():
 
     # dialogues
     with open('ressources/data/dialogue.json', 'r', encoding="utf-8") as fichier:
-        load_noeud(fichier)
+        load_dialogue(fichier)
+
+    lie(lambda **_: print('ok'), "test2")
 
     Dialogue(RelativePos(0.5, 0, 1, aligne='top'),
              Noeud.get_by_nom('A'), POLICE, 'game')

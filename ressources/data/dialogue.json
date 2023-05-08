@@ -30,6 +30,11 @@
             "prerequis": [
                 "test"
             ]
+        },
+        "D": {
+            "triggers": [
+                "test2"
+            ]
         }
     }
 }

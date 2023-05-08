@@ -5,7 +5,7 @@ import json
 
 import pygame
 from modules.outils import Noeud, Editeur
-from modules.graphics import Bouton, RelativePos, Texte
+from modules.graphics import Bouton, RelativePos, Texte, Frame
 
 
 # classes
@@ -54,7 +54,6 @@ class Dialogue:
 
     def __init__(self, pos: pygame.Vector3 | RelativePos, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
         self.noeud = noeud
-        self.choix = 0
         self.texte = Texte(pos, police, '#FFFFFF',
                            self.noeud.valeur, interface_nom)
 
@@ -63,19 +62,21 @@ class Dialogue:
 
     def next(self):
         """passe au dialogue suivant"""
-        temp = self.noeud.suivant(self.choix)
+        temp: Noeud | None = self.noeud.suivant()
 
-        if temp is not None:
-            self.noeud = temp
-            self.texte.texte = self.noeud.valeur
+        if temp is None:
+            return
+
+        self.noeud = temp
+        self.texte.texte = self.noeud.valeur
 
         self.bouton.element.elm_infos["surface"] = pygame.Surface(
-            self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA)
+        self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA)
         self.bouton.element.elm_infos["rect"] = self.bouton.element.elm_infos["surface"].get_rect()
 
 # fonctions
 
-def load_noeud(dialogue_file: TextIO):
+def load_dialogue(dialogue_file: TextIO):
     """charge les noeuds de dialogues"""
     dialogue_dct: Dict[str, Dict[str, Any]] = json.load(dialogue_file)
 
@@ -88,6 +89,11 @@ def load_noeud(dialogue_file: TextIO):
 
     for nom, relations in dialogue_dct['relations'].items():
         noeud = Noeud.get_by_nom(nom)
-        noeud.set_enfant(relations['end'])
+
         prerequis: List[str] = relations["prerequis"] if "prerequis" in relations else []
-        noeud.set_mode(relations['type'], prerequis)
+        triggers: List[str] = relations["triggers"] if "triggers" in relations else []
+        end: List[str] = relations['end'] if "end" in relations else []
+        typ: str = relations['type'] if "end" in relations else "exact"
+
+        noeud.set_enfant(end)
+        noeud.set_mode(typ, prerequis, triggers)

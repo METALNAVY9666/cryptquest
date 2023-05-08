@@ -213,6 +213,7 @@ class Noeud:
         self.mode = 'exact'
 
         self.prerequis: Dict[str, bool] = {}
+        self.triggers: List[str] = []
 
         Noeud.noeuds[nom] = self
 
@@ -220,7 +221,7 @@ class Noeud:
         """enfants du noeud"""
         self.children = enfants[:]
 
-    def set_mode(self, mode: str, prerequis: List[str]):
+    def set_mode(self, mode: str, prerequis: List[str], triggers: List[str]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
@@ -228,22 +229,37 @@ class Noeud:
             self.prerequis[nom] = False
             lie(lambda **_: set_dct(True, nom, self.prerequis), nom)
 
-    def suivant(self, index: int = 0):
+        # les triggers déclenche les événements de type None -> None
+        for nom in triggers:
+            self.triggers.append(nom)
+
+    def suivant(self):
         """passe au noeud suivant"""
-        if not all(self.prerequis.values()):
+        if not all(self.prerequis.values()) or len(self.children) == 0:
             return
+        
+        index = 0
 
         match self.mode:
             case 'exact':
-                index = 0
+                if len(self.children) > 1:
+                    # trop d'enfant, trop de choix
+                    raise ValueError
+
             case 'random':
                 index = random.randint(0, len(self.children) - 1)
-            case 'joueur':
-                ...
-            case _:
-                ...
 
-        return Noeud.noeuds[self.children[index]] if len(self.children) > 0 else None
+            case _:
+                # clef incorrect
+                raise KeyError
+
+        noeud = Noeud.noeuds[self.children[index]]
+
+        # on active les triggers
+        for nom in noeud.triggers:
+            appel(nom, {})
+
+        return noeud
 
     @classmethod
     def get_by_nom(cls, nom: str):
