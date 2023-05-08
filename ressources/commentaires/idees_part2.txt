@@ -6,13 +6,9 @@ incorporer des niveaux de séquence
 
 présentation d'un niveau :
 
+énigme géométrique -> grille
+énigme numérique / alphabétique -> ligne / colonne
 
-
-
-dans le cmd (ou cmd Tkinter)
-
-bouton "Passer" pour passer une question, apparaît à partir de 1m30
-présentation simple avec numéro de question dans un coin (affichage "question/maximum"), énigme au milieu (certaines chronométrées)
 
 si questions chronométrées non répondues dans le temps, rajouter 2 questions au total
 mauvaise réponse/non répondu : rajouter des questions + l'engueuler un ptit peu :)
