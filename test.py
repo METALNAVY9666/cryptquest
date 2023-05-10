@@ -3,6 +3,7 @@ import pygame
 
 pygame.init()
 
+
 def depy(t: float):
     return min((200 * (t % 4) **2 - 400* (t % 4) + 500), 500)
 
