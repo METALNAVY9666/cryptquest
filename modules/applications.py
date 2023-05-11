@@ -4,8 +4,9 @@ from typing import List, Dict, Callable, Any, TextIO
 import json
 
 import pygame
+
 from modules.outils import Noeud, Editeur
-from modules.graphics import Bouton, RelativePos, Texte, Frame
+from modules.graphics import Bouton, RelativePos, Texte
 
 
 # classes
@@ -19,6 +20,7 @@ class Shell:
         self.header = header
         self.texte.texte = self.header
         self.texte.avance(len(self.header))
+        self.texte.protected_curseur_pos = self.texte.curseur
 
         self.commandes = commandes
         self.texte.owner = self
@@ -36,6 +38,7 @@ class Shell:
         # on crée le prochain header
         self.texte.texte += self.header
         self.texte.avance(len(self.header))
+        self.texte.protected_curseur_pos = self.texte.curseur
 
         if not line.startswith(self.header):
             return

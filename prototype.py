@@ -7,11 +7,59 @@ from modules.applications import Shell, Dialogue, load_dialogue
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
+from modules.enigmes import SequentialEnigme, BinomialEnigme, Enigme
+
 WINDOW = pygame.display.set_mode((1080, 720))
-RelativePos.window = WINDOW
+RelativePos.default_window = WINDOW
 
 
 # fonctions
+
+def initialisation_bureaux():
+    """initialisation du bureaux"""
+    Interface.current_interface = Interface('bureau')
+
+    # image de fond
+    surface = pygame.image.load('ressources/img/background/desktop.jpg')
+    BackGround(surface, WINDOW, interface_nom='bureau')
+
+    # shell icon
+    surface_shell_icon = pygame.image.load('ressources/img/icons/cmd.png')
+    surface_shell_icon = pygame.transform.smoothscale_by(
+        surface_shell_icon, 0.4)
+
+    Bouton(pygame.Vector3(100, 100, 1), surface_shell_icon,
+           lambda: Interface.change_interface('shell'), interface_nom='bureau')
+
+
+def initialisation_shell():
+    """initialisation du shell"""
+    Interface('shell')
+
+    BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
+
+    texte = Editeur(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
+    Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {})})
+
+    KeyBoardListener(
+        {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
+
+
+def initialisation_jeux():
+    """initialisation du coeur principale"""
+    Interface('game')
+
+    KeyBoardListener(
+        {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
+
+    surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
+    surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
+    Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
+           lambda: Interface.change_interface('game'))
+    
+    lie(lambda: Enigme.create(SequentialEnigme), 'sequence') # type: ignore
+    lie(lambda: Enigme.create(BinomialEnigme), 'binomiale') # type: ignore
+
 
 def initialisation():
     # initialisation du mot de passe
@@ -19,35 +67,14 @@ def initialisation():
         # self.mdp = CrypteurPair.decode_AES(file.readlines()[0])
         mdp = file.readlines()[0]
 
-    Interface.current_interface = Interface('bureau')
-    Interface('shell')
-    Interface('game')
-
-    # image de fond
-    surface = pygame.image.load('ressources/img/background/desktop.jpg')
-    BackGround(surface, WINDOW, interface_nom='bureau')
-    BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
+    # bureaux
+    initialisation_bureaux()
 
     # shell
-    surface_shell_icon = pygame.image.load('ressources/img/icons/cmd.png')
-    surface_shell_icon = pygame.transform.smoothscale_by(
-        surface_shell_icon, 0.4)
-
-    Bouton(pygame.Vector3(100, 100, 1), surface_shell_icon,
-           lambda: Interface.change_interface('shell'), interface_nom='bureau')
-    texte = Editeur(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
-    Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {})})
-
-    KeyBoardListener(
-        {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
-    KeyBoardListener(
-        {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'game')
+    initialisation_shell()
 
     # jeu
-    surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
-    surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
-    Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
-           lambda: Interface.change_interface('game'))
+    initialisation_jeux()
 
     # dialogues
     with open('ressources/data/dialogue.json', 'r', encoding="utf-8") as fichier:

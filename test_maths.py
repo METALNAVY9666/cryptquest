@@ -65,8 +65,8 @@ class Matrice:
 
 coefs = Matrice([[1, 0, -3, 3], [0, 0, 3, -2], [0, 1, -2, 1], [0, 0, -1, 1]])
 
-points: List[pygame.Vector2] = [pygame.Vector2(100, 100), pygame.Vector2(300, 100),
-                                      pygame.Vector2(200, 0), pygame.Vector2(300, 200)]
+points: List[pygame.Vector2] = [pygame.Vector2(0, 0), pygame.Vector2(300, 0),
+                                      pygame.Vector2(30, 1000), pygame.Vector2(0, -10)]
 
 matrice_x = Matrice([[point.x for point in points]])
 matrice_y = Matrice([[point.y for point in points]])
@@ -85,7 +85,7 @@ def bezier(pre_compute_matrices: Tuple[Matrice, Matrice], temps: float, max_temp
     return posx.c(0, 0), posy.c(0, 0)
 
 
-def round_tuple(tpl: Iterable[Any]):
+def round_tuple(tpl: Iterable[Any]) -> Tuple[int, int]:
     """arrondi un tuple"""
     return tuple(round(val) for val in tpl)
 

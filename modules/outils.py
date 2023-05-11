@@ -59,6 +59,7 @@ class Editeur:
         self.texte = texte
         self.pos = pos
         self.curseur: int = 0
+        self.protected_curseur_pos: int = 0
         self.max_width = max_width
         self.max_lines = max_lines
         self.police = police
@@ -83,14 +84,18 @@ class Editeur:
             self.recule()
         elif event.key == pygame.K_RIGHT:
             self.avance()
+
         elif event.key == pygame.K_RETURN:
             self.texte = self.texte[:self.curseur] + \
                 '\n' + self.texte[self.curseur:]
             self.avance()
+
         elif event.key == pygame.K_BACKSPACE:
-            self.texte = self.texte[:(self.curseur - 1)] + \
-                self.texte[self.curseur:]
-            self.recule()
+            if self.curseur > self.protected_curseur_pos:
+                self.texte = self.texte[:(self.curseur - 1)] + \
+                    self.texte[self.curseur:]
+                self.recule()
+
         elif event.key != pygame.K_ESCAPE:
             self.texte = self.texte[:self.curseur] + \
                 event.unicode + self.texte[self.curseur:]

@@ -3,7 +3,8 @@
         "A": "Vite, il faut sécuriser ce qu'on peut des fichiers de l'ordinateur ",
         "B": "Commençons par les fichiers personnels",
         "C": "Commençons par les fichiers critiques",
-        "D": "Mince, il va falloir passer la sécurité"
+        "D": "tapez la commande ls dans le terminal",
+        "E": "Mince, il va falloir passer la sécurité"
     },
     "relations": {
         "A": {
@@ -17,23 +18,26 @@
             "type": "exact",
             "end": [
                 "D"
-            ],
-            "prerequis": [
-                "test"
             ]
         },
         "C": {
             "type": "exact",
             "end": [
                 "D"
+            ]
+        },
+        "D": {
+            "type": "exact",
+            "end": [
+                "E"
             ],
             "prerequis": [
                 "test"
             ]
         },
-        "D": {
+        "E": {
             "triggers": [
-                "test2"
+                "sequence"
             ]
         }
     }

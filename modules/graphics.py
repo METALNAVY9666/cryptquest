@@ -246,7 +246,8 @@ class Frame:
 
     frames: Dict[str, 'Frame'] = {}
 
-    def __init__(self, nom: str, interface: Interface, surface: pygame.Surface, pos: 'pygame.Vector3 | RelativePos', interface_nom: str | None = None) -> None:
+    def __init__(self, nom: str, interface: Interface, surface: pygame.Surface,
+                 pos: 'pygame.Vector3 | RelativePos', interface_nom: str | None = None) -> None:
         self.surface = surface
         self.rect = self.surface.get_rect()
         self.pos = pos
@@ -273,14 +274,16 @@ class RelativePos:
     classe de représentation
     des positions variables
     """
-    window: pygame.Surface
+    default_window: pygame.Surface
 
-    def __init__(self, relx: float, rely: float, posz: int, aligne: str = 'centre') -> None:
+    def __init__(self, relx: float, rely: float, posz: int,
+                 aligne: str = 'centre', window: pygame.Surface | None = None) -> None:
         self.relx, self.rely = relx, rely
         self.x: float
         self.y: float
         self.z = posz
         self.aligne = aligne
+        self.window = window if window is not None else RelativePos.default_window
         self.update()
 
     @property
@@ -290,8 +293,9 @@ class RelativePos:
 
     def update(self):
         """méthode de mise à jour"""
-        self.x = self.relx * RelativePos.window.get_width()
-        self.y = self.rely * RelativePos.window.get_height()
+
+        self.x = self.relx * self.window.get_width()
+        self.y = self.rely * self.window.get_height()
 
 
 class StaticElement(Element):
