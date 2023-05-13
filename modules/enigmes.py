@@ -1,7 +1,7 @@
 """module de gestion des énigmes"""
 
 from abc import ABC
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import random
 import math
 import json
@@ -129,12 +129,96 @@ class SequentialEnigme(EnigmeGenerateur):
         depart = random.randint(*extract('depart', 'sequence'))
 
         return SequentialEnigme(quantite, mult, depart)
+    
+
+# à changer
 
 
-class NumericEnigme:
+shape1 = pygame.Surface((30, 30), pygame.SRCALPHA)
+pygame.draw.rect(shape1, '#FFFFFF', pygame.Rect(5, 5, 20, 20))
+
+shape2 = pygame.Surface((30, 30), pygame.SRCALPHA)
+pygame.draw.circle(shape2, '#FFFFFF', (15, 15), 9)
+
+shape3 = pygame.Surface((30, 30), pygame.SRCALPHA)
+pygame.draw.polygon(shape3, '#FFFFFF', [(5, 5), (15, 25), (25, 5)])
+
+shape4 = pygame.Surface((30, 30), pygame.SRCALPHA)
+pygame.draw.polygon(shape4, '#FFFFFF', [(10, 0), (20, 0), (20, 30), (10, 30)])
+
+
+raye = pygame.Surface((30, 30), pygame.SRCALPHA)
+
+for x in range(30):
+    for y in range(30):
+        if not (x + y) % 3:
+            raye.set_at((x, y), "#FF00FF")
+
+vide = pygame.Surface((30, 30), pygame.SRCALPHA)
+vide.fill('#000000')
+
+plein = pygame.Surface((30, 30), pygame.SRCALPHA)
+plein.fill('#00FF00')
+
+
+class GeometricCombinaison:
+    """représentation des combinaisons géométriques"""
+
+    shapes: List[pygame.Surface] = [shape1, shape2, shape3, shape4]
+    remplissage: List[pygame.Surface] = [raye, vide, plein]
+
+    def __init__(self, coefficients: List[Tuple[int, int, int]]) -> None:
+        self.coefficients = coefficients
+
+    @staticmethod
+    def scale(surface: pygame.Surface, echelle: int):
+        """condense la surface avec un facteur sqrt(2)^(-n)"""
+        back = pygame.Surface(surface.get_size())
+        back_rect = back.get_rect()
+        surf = pygame.transform.scale_by(surface, 1 / (math.sqrt(2) ** echelle))
+        rect = surf.get_rect()
+        rect.center = back_rect.center
+
+        back.blit(surf, rect)
+        return back
+
+    def get_surface(self):
+        """forme la surface à partir des coefficients"""
+        surface: None | pygame.Surface = None
+
+        for ind, tpl in enumerate(self.coefficients):
+            surf = self.intersect(GeometricCombinaison.shapes[tpl[0]],
+                                  GeometricCombinaison.remplissage[tpl[1]])
+            surf = pygame.transform.rotate(surf, ind * tpl[2] * 90)
+            if surface is None:
+                surface = surf
+            else:
+                surf = self.scale(surf, ind)
+                surface.blit(surf, (0, 0))
+
+    @staticmethod
+    def intersect(shape: pygame.Surface, remplissage: pygame.Surface):
+        """intersection"""
+        mask1 = pygame.mask.from_surface(shape)
+        mask2 = pygame.mask.from_surface(remplissage)
+
+        intersection = mask1.overlap_mask(mask2, (0, 0))
+
+        return intersection.to_surface(surface=pygame.Surface(intersection.get_size(), pygame.SRCALPHA),
+                                       setsurface=remplissage, unsetcolor=None)
+
+
+class GeometricEnigme:
+    """génération d'énigme géométrique"""
+
+    def __init__(self) -> None:
+        pass
+
+
+class Enigme:
     """classe de gestion des énigmes"""
 
-    current_enigme: 'None | NumericEnigme' = None
+    current_enigme: 'None | Enigme' = None
 
     def __init__(self, generateur: EnigmeGenerateur, interface_nom: str) -> None:
         self.serie = generateur.generate()
@@ -158,7 +242,7 @@ class NumericEnigme:
 
         appel('enigme_resolu', {})
         self.element.destroy()
-        NumericEnigme.current_enigme = None
+        Enigme.current_enigme = None
 
         return True
 

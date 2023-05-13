@@ -7,7 +7,7 @@ from modules.applications import Shell, Dialogue, load_dialogue
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
-from modules.enigmes import SequentialEnigme, BinomialEnigme, NumericEnigme
+from modules.enigmes import SequentialEnigme, BinomialEnigme, Enigme
 
 WINDOW = pygame.display.set_mode((1080, 720))
 RelativePos.default_window = WINDOW
@@ -57,8 +57,8 @@ def initialisation_jeux():
     Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
            lambda: Interface.change_interface('game'))
     
-    lie(lambda: NumericEnigme.create(SequentialEnigme), 'sequence') # type: ignore
-    lie(lambda: NumericEnigme.create(BinomialEnigme), 'binomiale') # type: ignore
+    lie(lambda: Enigme.create(SequentialEnigme), 'sequence') # type: ignore
+    lie(lambda: Enigme.create(BinomialEnigme), 'binomiale') # type: ignore
 
 
 def initialisation():
