@@ -213,20 +213,21 @@ class Noeud:
 
     def __init__(self, valeur: Any, nom: str) -> None:
         self.valeur = valeur
-        self.children: List[str] = []
+        self.children: List['Noeud'] = []
         self.nom = nom
         self.mode = 'exact'
 
         self.prerequis: Dict[str, bool] = {}
+        self.in_prerequis: Dict[str, bool] = {}
         self.triggers: List[str] = []
 
         Noeud.noeuds[nom] = self
 
     def set_enfant(self, enfants: List['str']):
         """enfants du noeud"""
-        self.children = enfants[:]
+        self.children = [Noeud.get_by_nom(enfant) for enfant in enfants]
 
-    def set_mode(self, mode: str, prerequis: List[str], triggers: List[str]):
+    def set_mode(self, mode: str, in_prerequis: List[str], prerequis: List[str], triggers: List[str]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
@@ -234,35 +235,56 @@ class Noeud:
             self.prerequis[nom] = False
             lie(lambda **_: set_dct(True, nom, self.prerequis), nom)
 
+        for nom in in_prerequis:
+            self.prerequis[nom] = False
+            lie(lambda **_: set_dct(True, nom, self.in_prerequis), nom)
+
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:
             self.triggers.append(nom)
+    
+    def arrive(self):
+        """exécuter lors de l'arrivée sur ce noeud"""
+        # cas particulier lié au jeu
+        if 'sequence' in self.triggers or 'binomiale' in self.triggers:
+            self.prerequis['enigme_resolu'] = False
+            lie(lambda **_: set_dct(True, 'enigme_resolu', self.prerequis), 'enigme_resolu')
+
+        # on active les triggers du noeud enfant
+        for nom in self.triggers:
+            appel(nom, {})
+    
+    def quitte(self):
+        """exécuter lors du départ du noeud"""
+        # cas particulier lié au jeu
+        if 'enigme_resolu' in self.prerequis:
+            vide('enigme_resolu')
 
     def suivant(self):
         """passe au noeud suivant"""
         if not all(self.prerequis.values()) or len(self.children) == 0:
             return
-        
-        index = 0
+
+        noeud = self.children[0]
 
         match self.mode:
             case 'exact':
                 if len(self.children) > 1:
                     # trop d'enfant, trop de choix
                     raise ValueError
+                
+                if not all(noeud.in_prerequis.values()):
+                    return
 
             case 'random':
-                index = random.randint(0, len(self.children) - 1)
+                noeud = random.choice([enfant for enfant in self.children if
+                                       all(enfant.in_prerequis.values())])
 
             case _:
                 # clef incorrect
                 raise KeyError
-
-        noeud = Noeud.noeuds[self.children[index]]
-
-        # on active les triggers
-        for nom in noeud.triggers:
-            appel(nom, {})
+        self.quitte()
+        noeud.arrive()
 
         return noeud
 

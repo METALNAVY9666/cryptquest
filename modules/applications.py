@@ -94,9 +94,10 @@ def load_dialogue(dialogue_file: TextIO):
         noeud = Noeud.get_by_nom(nom)
 
         prerequis: List[str] = relations["prerequis"] if "prerequis" in relations else []
+        in_prerequis: List[str] = relations["prerequis entrant"] if "prerequis entrant" in relations else []
         triggers: List[str] = relations["triggers"] if "triggers" in relations else []
         end: List[str] = relations['end'] if "end" in relations else []
         typ: str = relations['type'] if "end" in relations else "exact"
 
         noeud.set_enfant(end)
-        noeud.set_mode(typ, prerequis, triggers)
+        noeud.set_mode(typ, in_prerequis, prerequis, triggers)

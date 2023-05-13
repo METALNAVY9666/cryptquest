@@ -191,7 +191,7 @@ class Element:
         }
 
         self.backup_rotation = 0
-        self.pos: pygame.Vector3 = self.elm_infos["objet"].pos
+        self.pos: pygame.Vector3 | RelativePos = self.elm_infos["objet"].pos
 
         if interface_nom is None:
             Interface.current_interface.add_element(self)
@@ -201,6 +201,12 @@ class Element:
     def delink(self):
         """délie l'élément"""
         self.elm_infos["interface"].remove_element(self)
+
+    def destroy(self):
+        """détruit l'objet localement,
+        sans garanti pour les duplicats"""
+        self.delink()
+        del self
 
     def ancre(self):
         """ancre le rectangle à la bonne position"""

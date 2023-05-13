@@ -24,6 +24,9 @@
             "type": "exact",
             "end": [
                 "D"
+            ],
+            "triggers": [
+                "sequence"
             ]
         },
         "D": {

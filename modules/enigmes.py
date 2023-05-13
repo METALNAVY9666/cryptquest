@@ -9,6 +9,7 @@ import json
 import pygame
 
 from modules.graphics import StaticElement, POLICE, RelativePos
+from modules.outils import appel, lie
 
 
 with open('ressources/data/difficulte.json', 'r', encoding='utf-8') as file:
@@ -119,7 +120,7 @@ class SequentialEnigme(EnigmeGenerateur):
         """génère la solution"""
         return hex(SequentialEnigme.operation(self.last_value, self.parametre['mult'],
                                               self.parametre['div']))[2:]
-    
+
     @classmethod
     def create(cls) -> 'SequentialEnigme':
         """crée une instance de cette classe en fonction de la difficulté"""
@@ -130,15 +131,36 @@ class SequentialEnigme(EnigmeGenerateur):
         return SequentialEnigme(quantite, mult, depart)
 
 
-class Enigme:
+class NumericEnigme:
     """classe de gestion des énigmes"""
+
+    current_enigme: 'None | NumericEnigme' = None
 
     def __init__(self, generateur: EnigmeGenerateur, interface_nom: str) -> None:
         self.serie = generateur.generate()
+        self.solution = generateur.generate_solution()
         self.pos = RelativePos(0.5, 0.5, 1)
 
         self.element = StaticElement(
-            self, Enigme.liste_to_surface(self.serie), interface_nom)
+            self, self.liste_to_surface(self.serie), interface_nom)
+
+        #  à retirer
+        lie(lambda **_: print('hi'), 'enigme_resolu')
+        self.essaie(self.solution)
+
+    def essaie(self, valeur: str | float) -> bool:
+        """vérifie si la solution donnée est la bonne:
+        si la valeur est correcte, trigger l'événement donné
+        et supprime l'énigme"""
+
+        if not valeur == self.solution:
+            return False
+
+        appel('enigme_resolu', {})
+        self.element.destroy()
+        NumericEnigme.current_enigme = None
+
+        return True
 
     @staticmethod
     def liste_to_surface(sequence: List[str] | List[float]):
@@ -160,7 +182,7 @@ class Enigme:
             surface.blit(surf, (posx * size, 0))
 
         return surface
-    
+
     @classmethod
     def create(cls, generateur: EnigmeGenerateur):
-        cls(generateur.create(), 'game')
+        cls.current_enigme = cls(generateur.create(), 'game')
