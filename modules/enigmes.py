@@ -35,11 +35,11 @@ class EnigmeGenerateur(ABC):
         self.parametre: Dict[str, Any]
         self.quantite: int
 
-    def generate_solution(self) -> str | float:
+    def generate_solution(self) -> Any:
         """génère la solution"""
         ...
 
-    def generate(self) -> List[str] | List[float]:
+    def generate(self) -> List[Any]:
         """génère une séquence"""
         ...
 
@@ -58,7 +58,7 @@ class BinomialEnigme(EnigmeGenerateur):
         self.parametre = {'entree': [
             random.randint(-7, 7) for _ in range(profondeur)]}
 
-    def generate_solution(self) -> str | float:
+    def generate_solution(self) -> float:
         """génère la solution"""
         return self.sequence(self.parametre['entree'] + [0] * (self.quantite - self.profondeur + 1))[-1]
 
@@ -129,43 +129,39 @@ class SequentialEnigme(EnigmeGenerateur):
         depart = random.randint(*extract('depart', 'sequence'))
 
         return SequentialEnigme(quantite, mult, depart)
-    
+
 
 # à changer
 
 
-shape1 = pygame.Surface((30, 30), pygame.SRCALPHA)
-pygame.draw.rect(shape1, '#FFFFFF', pygame.Rect(5, 5, 20, 20))
+shape1 = pygame.Surface((50, 50), pygame.SRCALPHA)
+pygame.draw.rect(shape1, '#FFFFFF', pygame.Rect(5, 5, 40, 40))
 
-shape2 = pygame.Surface((30, 30), pygame.SRCALPHA)
-pygame.draw.circle(shape2, '#FFFFFF', (15, 15), 9)
+shape2 = pygame.Surface((50, 50), pygame.SRCALPHA)
+pygame.draw.circle(shape2, '#FFFFFF', (25, 25), 24)
 
-shape3 = pygame.Surface((30, 30), pygame.SRCALPHA)
-pygame.draw.polygon(shape3, '#FFFFFF', [(5, 5), (15, 25), (25, 5)])
+shape3 = pygame.Surface((50, 50), pygame.SRCALPHA)
+pygame.draw.polygon(shape3, '#FFFFFF', [(37, 3), (0, 25), (37, 47)])
 
-shape4 = pygame.Surface((30, 30), pygame.SRCALPHA)
-pygame.draw.polygon(shape4, '#FFFFFF', [(10, 0), (20, 0), (20, 30), (10, 30)])
+shape4 = pygame.Surface((50, 50), pygame.SRCALPHA)
+pygame.draw.polygon(shape4, '#FFFFFF', [(20, 0), (30, 0), (30, 50), (20, 50)])
 
 
-raye = pygame.Surface((30, 30), pygame.SRCALPHA)
+vert = pygame.Surface((50, 50), pygame.SRCALPHA)
+vert.fill('#20E040')
 
-for x in range(30):
-    for y in range(30):
-        if not (x + y) % 3:
-            raye.set_at((x, y), "#FF00FF")
+rouge = pygame.Surface((50, 50), pygame.SRCALPHA)
+rouge.fill('#E00030')
 
-vide = pygame.Surface((30, 30), pygame.SRCALPHA)
-vide.fill('#000000')
-
-plein = pygame.Surface((30, 30), pygame.SRCALPHA)
-plein.fill('#00FF00')
+orange = pygame.Surface((50, 50), pygame.SRCALPHA)
+orange.fill('#E06000')
 
 
 class GeometricCombinaison:
     """représentation des combinaisons géométriques"""
 
     shapes: List[pygame.Surface] = [shape1, shape2, shape3, shape4]
-    remplissage: List[pygame.Surface] = [raye, vide, plein]
+    remplissage: List[pygame.Surface] = [vert, rouge, orange]
 
     def __init__(self, coefficients: List[Tuple[int, int, int]]) -> None:
         self.coefficients = coefficients
@@ -173,28 +169,41 @@ class GeometricCombinaison:
     @staticmethod
     def scale(surface: pygame.Surface, echelle: int):
         """condense la surface avec un facteur sqrt(2)^(-n)"""
-        back = pygame.Surface(surface.get_size())
-        back_rect = back.get_rect()
-        surf = pygame.transform.scale_by(surface, 1 / (math.sqrt(2) ** echelle))
-        rect = surf.get_rect()
-        rect.center = back_rect.center
+        return pygame.transform.scale_by(surface, 1 / (math.sqrt(2) ** echelle))
 
-        back.blit(surf, rect)
-        return back
+    @staticmethod
+    def transparent(surface: pygame.Surface, couleur: Tuple[int, int, int, int]):
+        """rend transparent tous les pixels de la couleur donnée"""
+        transparent_mask = pygame.mask.from_threshold(
+            surface, couleur, (1, 1, 1, 1))
+        surface_mask = pygame.mask.from_surface(surface)
+        surface_mask.erase(transparent_mask, (0, 0))
+
+        return surface_mask.to_surface(surface=pygame.Surface(surface_mask.get_size(), pygame.SRCALPHA),
+                                       setsurface=surface, unsetcolor=None)
 
     def get_surface(self):
         """forme la surface à partir des coefficients"""
-        surface: None | pygame.Surface = None
+        surface: pygame.Surface = pygame.Surface((0, 0))
 
         for ind, tpl in enumerate(self.coefficients):
             surf = self.intersect(GeometricCombinaison.shapes[tpl[0]],
                                   GeometricCombinaison.remplissage[tpl[1]])
-            surf = pygame.transform.rotate(surf, ind * tpl[2] * 90)
-            if surface is None:
+            surf = pygame.transform.rotate(surf, tpl[2] * 90)
+            if surface.get_width() == 0:
                 surface = surf
             else:
                 surf = self.scale(surf, ind)
-                surface.blit(surf, (0, 0))
+
+                # on centre l'image
+                sizex = int((surface.get_width() - surf.get_width()) / 2)
+                sizey = int((surface.get_height() - surf.get_height()) / 2)
+
+                surface.blit(surf, (sizex, sizey))
+
+        surface = self.transparent(surface, (0, 0, 0, 255))
+
+        return surface
 
     @staticmethod
     def intersect(shape: pygame.Surface, remplissage: pygame.Surface):
@@ -208,11 +217,72 @@ class GeometricCombinaison:
                                        setsurface=remplissage, unsetcolor=None)
 
 
-class GeometricEnigme:
+class GeometricEnigme(EnigmeGenerateur):
     """génération d'énigme géométrique"""
 
-    def __init__(self) -> None:
-        pass
+    difficulte_ind = ['simple', 'intermediaire', 'difficile']
+
+    def __init__(self, size: int) -> None:
+        self.shape_variation = [random.randint(0, len(GeometricCombinaison.shapes) - 1),
+                                random.randint(0, len(GeometricCombinaison.shapes) - 1)]
+
+        self.filling_variation = [random.randint(0, len(GeometricCombinaison.remplissage) - 1),
+                                  random.randint(0, len(GeometricCombinaison.remplissage) - 1)]
+
+        self.rotation_variation = [random.randint(-1, 1), random.randint(-1, 1)]
+
+        self.valeur_initiales: List[Tuple[int, int, int]] = []
+
+        for _ in range(3):
+            self.valeur_initiales.append((random.randint(0, len(GeometricCombinaison.shapes) - 1),
+                                  random.randint(
+                                      0, len(GeometricCombinaison.remplissage) - 1),
+                                  random.randint(0, 3)))
+
+        self.size = size
+
+        print(self.shape_variation, self.filling_variation, self.rotation_variation)
+
+    @classmethod
+    def create(cls) -> EnigmeGenerateur:
+        return cls(cls.difficulte_ind.index(DIFFICULTE_NV) + 2)
+
+    def generate(self) -> List[List[Tuple[int, int, int]]]:
+        """génère l'énigme"""
+        res: List[List[Tuple[int, int, int]]] = []
+        # à remettre bien
+        for ind in range(self.size ** 2):
+            coefficients: List[Tuple[int, int, int]] = []
+
+            for indx in range(3):
+                new_shape = (self.valeur_initiales[indx][0] + self.shape_variation[0] * (ind % self.size)
+                             + self.shape_variation[1] * (ind // self.size)) % len(GeometricCombinaison.shapes)
+                new_remplissage = (self.valeur_initiales[indx][1] + self.filling_variation[0] * (ind % self.size)
+                                   + self.filling_variation[1] * (ind // self.size)) % len(GeometricCombinaison.remplissage)
+                new_rotation = (self.valeur_initiales[indx][2] + self.rotation_variation[0] * (ind % self.size)
+                                + self.rotation_variation[1] * (ind // self.size)) % 4
+
+                coefficients.append((new_shape, new_remplissage, new_rotation))
+            res.append(coefficients)
+        return res
+
+    def generate_solution(self) -> List[Tuple[int, int, int]]:
+        """génère la solution"""
+        coefficients: List[Tuple[int, int, int]] = []
+
+        for indx in range(3):
+            new_shape = (self.valeur_initiales[indx][0] + self.shape_variation[0] * ((self.size ** 2 - 1)
+                                                                                     % self.size)
+                         + self.shape_variation[1] * ((self.size ** 2 - 1) // self.size)) % len(GeometricCombinaison.shapes)
+            new_remplissage = (self.valeur_initiales[indx][0] + self.filling_variation[0] *
+                               ((self.size ** 2 - 1) % self.size)
+                               + self.filling_variation[1] * ((self.size ** 2 - 1) // self.size)) % len(GeometricCombinaison.remplissage)
+            new_rotation = (self.valeur_initiales[indx][0] + self.rotation_variation[0] *
+                            ((self.size ** 2 - 1) % self.size)
+                            + self.rotation_variation[1] * ((self.size ** 2 - 1) // self.size)) % 4
+
+            coefficients.append((new_shape, new_remplissage, new_rotation))
+        return coefficients
 
 
 class Enigme:
@@ -223,14 +293,22 @@ class Enigme:
     def __init__(self, generateur: EnigmeGenerateur, interface_nom: str) -> None:
         self.serie = generateur.generate()
         self.solution = generateur.generate_solution()
+        print(self.serie)
+        print(self.solution)
         self.pos = RelativePos(0.5, 0.5, 1)
 
+        match generateur:
+            case GeometricEnigme():
+                surface = self.tableau_to_surface(self.serie, generateur.size, 300)
+            case _:
+                surface = self.liste_to_surface(self.serie)
+
         self.element = StaticElement(
-            self, self.liste_to_surface(self.serie), interface_nom)
+            self, surface, interface_nom)
 
         #  à retirer
         lie(lambda **_: print('hi'), 'enigme_resolu')
-        self.essaie(self.solution)
+        #self.essaie(self.solution)
 
     def essaie(self, valeur: str | float) -> bool:
         """vérifie si la solution donnée est la bonne:
@@ -265,6 +343,24 @@ class Enigme:
             surf.blit(surf_elm, rect)
             surface.blit(surf, (posx * size, 0))
 
+        return surface
+
+    @staticmethod
+    def tableau_to_surface(tableau: List[List[Tuple[int, int, int]]], nombre: int, taille_surface: int):
+        """transforme un tableau carré 2d de taille donnée en surface"""
+        offset = 10
+        surface = pygame.Surface((taille_surface + (nombre - 1) * offset,
+                                  taille_surface + (nombre - 1) * offset))
+        unite = taille_surface / nombre
+        for ind, valeur in enumerate(tableau):
+            surf = GeometricCombinaison(valeur).get_surface()
+
+            # ajuste la taille de la surface si nécessaire
+            if abs(surf.get_width() - unite) > 2:
+                surf = pygame.transform.scale(surf, (unite, unite))
+
+            surface.blit(surf, ((unite + offset) * (ind % nombre),
+                         (unite + offset) * (ind // nombre)))
         return surface
 
     @classmethod

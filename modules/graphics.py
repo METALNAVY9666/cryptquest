@@ -255,6 +255,7 @@ class Frame:
     def __init__(self, nom: str, interface: Interface, surface: pygame.Surface,
                  pos: 'pygame.Vector3 | RelativePos', interface_nom: str | None = None) -> None:
         self.surface = surface
+        self.backup = surface.copy()
         self.rect = self.surface.get_rect()
         self.pos = pos
         self.interface = interface
@@ -270,7 +271,7 @@ class Frame:
     def update(self):
         """méthode de mise à jour"""
         # clear
-        self.surface.fill('#000000')
+        self.surface.blit(self.backup, (0, 0))
         self.interface.update()
         self.surface.blits(list(self.interface.render()))
 

@@ -246,7 +246,7 @@ class Noeud:
     def arrive(self):
         """exécuter lors de l'arrivée sur ce noeud"""
         # cas particulier lié au jeu
-        if 'sequence' in self.triggers or 'binomiale' in self.triggers:
+        if 'sequence' in self.triggers or 'binomiale' in self.triggers or 'geometrie' in self.triggers:
             self.prerequis['enigme_resolu'] = False
             lie(lambda **_: set_dct(True, 'enigme_resolu', self.prerequis), 'enigme_resolu')
 
@@ -262,7 +262,8 @@ class Noeud:
 
     def suivant(self):
         """passe au noeud suivant"""
-        if not all(self.prerequis.values()) or len(self.children) == 0:
+        if not all(self.prerequis.values()) or len([enfant for enfant in self.children 
+                                                    if all(enfant.in_prerequis)]) == 0:
             return
 
         noeud = self.children[0]

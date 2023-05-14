@@ -10,7 +10,6 @@
         "A": {
             "type": "random",
             "end": [
-                "B",
                 "C"
             ]
         },
@@ -26,7 +25,7 @@
                 "D"
             ],
             "triggers": [
-                "sequence"
+                "geometrie"
             ]
         },
         "D": {
