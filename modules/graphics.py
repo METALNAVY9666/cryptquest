@@ -1,4 +1,5 @@
 """module de définition des classes principales"""
+from dataclasses import dataclass
 from typing import List, Any, Tuple, Dict, Callable
 import pygame
 
@@ -151,6 +152,12 @@ class Interface:
             if hasattr(elm.elm_infos["objet"], 'on_click'):
                 elm.elm_infos["objet"].on_click(event)
 
+    def on_declick(self, event: pygame.event.Event):
+        """gestion du relachement du clique"""
+        for elm in self.elements:
+            if hasattr(elm.elm_infos["objet"], 'on_declick'):
+                elm.elm_infos["objet"].on_declick(event)
+
     def update(self):
         for elm in self.elements:
             if hasattr(elm.elm_infos["objet"], 'update'):
@@ -191,7 +198,7 @@ class Element:
         }
 
         self.backup_rotation = 0
-        self.pos: pygame.Vector3 | RelativePos = self.elm_infos["objet"].pos
+        self.pos: Vector3 | RelativePos = self.elm_infos["objet"].pos
 
         if interface_nom is None:
             Interface.current_interface.add_element(self)
@@ -211,11 +218,9 @@ class Element:
     def ancre(self):
         """ancre le rectangle à la bonne position"""
 
-        self.pos: pygame.Vector3 | RelativePos = self.elm_infos['objet'].pos
-        ancre = 'topleft'
+        self.pos: Vector3 | RelativePos = self.elm_infos['objet'].pos
 
-        if isinstance(self.pos, RelativePos):
-            ancre = self.pos.aligne
+        ancre = self.pos.aligne # type: ignore
 
         self.elm_infos['rect'].center = vect2_to_tuple(self.pos.xy)
         if 'top' in ancre:
@@ -253,7 +258,7 @@ class Frame:
     frames: Dict[str, 'Frame'] = {}
 
     def __init__(self, nom: str, interface: Interface, surface: pygame.Surface,
-                 pos: 'pygame.Vector3 | RelativePos', interface_nom: str | None = None) -> None:
+                 pos: 'Vector3 | RelativePos', interface_nom: str | None = None) -> None:
         self.surface = surface
         self.backup = surface.copy()
         self.rect = self.surface.get_rect()
@@ -274,6 +279,16 @@ class Frame:
         self.surface.blit(self.backup, (0, 0))
         self.interface.update()
         self.surface.blits(list(self.interface.render()))
+
+
+@dataclass
+class Vector3(pygame.Vector3):
+    """vecteur 3D"""
+
+    x: float
+    y: float
+    z: float
+    aligne: str = 'topleft'
 
 
 class RelativePos:
@@ -373,7 +388,7 @@ class AnimElement(Element):
 class Bouton:
     """classe de représentation d'un bouton"""
 
-    def __init__(self, pos: pygame.Vector3 | RelativePos, surface: pygame.Surface, fnct: Callable[[], None],
+    def __init__(self, pos: Vector3 | RelativePos, surface: pygame.Surface, fnct: Callable[[], None],
                  interface_nom: str | None = None, click: int = 1) -> None:
         self.pos = pos
         self.element = Element(
@@ -390,7 +405,7 @@ class Bouton:
 class Texte:
     """gestion des textes"""
 
-    def __init__(self, pos: pygame.Vector3 | RelativePos, police: pygame.font.Font, color: str, texte: str = "", interface_nom: str | None = None) -> None:
+    def __init__(self, pos: Vector3 | RelativePos, police: pygame.font.Font, color: str, texte: str = "", interface_nom: str | None = None) -> None:
         self.texte = texte
         self.pos = pos
         self.police, self.color = police, color

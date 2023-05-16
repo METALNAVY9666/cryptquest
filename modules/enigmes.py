@@ -15,7 +15,7 @@ from modules.outils import appel, lie
 with open('ressources/data/difficulte.json', 'r', encoding='utf-8') as file:
     DIFFICULTE_DCT = json.load(file)
 
-DIFFICULTE_NV: str = 'simple'
+DIFFICULTE_NV: str = 'difficile'
 
 
 def extract(parametre: str, typ: str):

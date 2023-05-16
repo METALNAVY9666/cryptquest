@@ -2,8 +2,8 @@
 
 from typing import List
 import pygame
-from modules.graphics import POLICE, Interface, Bouton, RelativePos
-from modules.applications import Shell, Dialogue, load_dialogue
+from modules.graphics import POLICE, Interface, Bouton, RelativePos, Vector3
+from modules.applications import Shell, Dialogue, load_dialogue, Draggable
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
@@ -28,7 +28,7 @@ def initialisation_bureaux():
     surface_shell_icon = pygame.transform.smoothscale_by(
         surface_shell_icon, 0.4)
 
-    Bouton(pygame.Vector3(100, 100, 1), surface_shell_icon,
+    Bouton(Vector3(100, 100, 1), surface_shell_icon,
            lambda: Interface.change_interface('shell'), interface_nom='bureau')
 
 
@@ -38,7 +38,7 @@ def initialisation_shell():
 
     BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
 
-    texte = Editeur(pygame.Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
+    texte = Editeur(Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
     Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {})})
 
     KeyBoardListener(
@@ -54,7 +54,7 @@ def initialisation_jeux():
 
     surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
-    Bouton(pygame.Vector3(300, 100, 1), surface_game_icon,
+    Bouton(Vector3(300, 100, 1), surface_game_icon,
            lambda: Interface.change_interface('game'))
     
     lie(lambda: Enigme.create(SequentialEnigme), 'sequence') # type: ignore
@@ -97,6 +97,8 @@ def handle_event(events: List[pygame.event.Event]):
                 Interface.current_interface.on_keypress(event)
             case pygame.MOUSEBUTTONDOWN:
                 Interface.current_interface.on_click(event)
+            case pygame.MOUSEBUTTONUP:
+                Interface.current_interface.on_declick(event)
             case _:
                 ...
     return True

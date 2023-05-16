@@ -6,7 +6,7 @@ import json
 import pygame
 
 from modules.outils import Noeud, Editeur
-from modules.graphics import Bouton, RelativePos, Texte
+from modules.graphics import Bouton, Element, RelativePos, Texte, Vector3
 
 
 # classes
@@ -55,7 +55,7 @@ class Shell:
 class Dialogue:
     """classe de gestion des dialogues"""
 
-    def __init__(self, pos: pygame.Vector3 | RelativePos, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
+    def __init__(self, pos: Vector3 | RelativePos, noeud: Noeud, police: pygame.font.Font, interface_nom: str) -> None:
         self.noeud = noeud
         self.texte = Texte(pos, police, '#FFFFFF',
                            self.noeud.valeur, interface_nom)
@@ -76,6 +76,37 @@ class Dialogue:
         self.bouton.element.elm_infos["surface"] = pygame.Surface(
         self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA)
         self.bouton.element.elm_infos["rect"] = self.bouton.element.elm_infos["surface"].get_rect()
+
+
+class Draggable:
+    """objet qu'on peut bouger"""
+
+    def __init__(self, pos: Vector3, surface: pygame.Surface, interface_nom: str) -> None:
+        self.pos = pos
+        self.state = 0
+        self.element = Element(self, surface, surface.get_rect(), interface_nom)
+
+    def on_click(self, event: pygame.event.Event):
+        """gestion du clique"""
+        if event.button == 1 and self.element.elm_infos['rect'].collidepoint(event.pos):
+            self.state = 1
+    
+    def on_declick(self, event: pygame.event.Event):
+        """gestion du relachement du clique"""
+        self.state = 0
+
+    def update(self):
+        """méthode de mise à jour"""
+        if self.state:
+            self.element.pos.x, self.element.pos.y = pygame.mouse.get_pos()
+
+
+class Brique(Draggable):
+    """classe de gestion de brique élémentaire géométrique"""
+
+    def __init__(self, pos: Vector3, surface: pygame.Surface, interface_nom: str) -> None:
+        super().__init__(pos, surface, interface_nom)
+
 
 # fonctions
 

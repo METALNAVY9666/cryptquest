@@ -4,7 +4,7 @@ import random
 
 import pygame
 
-from modules.graphics import Element, StaticElement
+from modules.graphics import Element, StaticElement, Vector3
 
 # système observeur
 
@@ -52,7 +52,7 @@ def set_dct(valeur: Any, clef: str, dct: Dict[str, Any]):
 class Editeur:
     """classe de représentation d'un texte"""
 
-    def __init__(self, pos: pygame.Vector3, texte: str, police: pygame.font.Font,
+    def __init__(self, pos: Vector3, texte: str, police: pygame.font.Font,
                  max_width: int, max_lines: int, interface_nom: str | None = None) -> None:
         self.owner: Any | None = None
 
@@ -178,7 +178,7 @@ class Editeur:
 class BackGround:
     """gestion de l'arrière plan"""
 
-    def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface, pos: pygame.Vector3 = pygame.Vector3(0, 0, 0),
+    def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface, pos: Vector3 = Vector3(0, 0, 0),
                  interface_nom: str | None = None) -> None:
         self.pos = pos
         self.surface_of = surface_of
@@ -196,7 +196,7 @@ class KeyBoardListener:
     """écoute les événements claviers"""
 
     def __init__(self, binds: Dict[int, Callable[[], None]], interface_nom: str) -> None:
-        self.pos = pygame.Vector3(0, 0, 0)
+        self.pos = Vector3(0, 0, 0)
         self.binds = binds
         self.element = Element(self, pygame.Surface(
             (0, 0)), pygame.Rect(0, 0, 0, 0), interface_nom)
