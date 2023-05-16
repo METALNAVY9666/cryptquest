@@ -3,7 +3,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos, Vector3
-from modules.applications import Shell, Dialogue, load_dialogue, Draggable
+from modules.applications import Shell, Dialogue, load_dialogue, Brique
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
@@ -39,7 +39,8 @@ def initialisation_shell():
     BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
 
     texte = Editeur(Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
-    Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {})})
+    Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {}),
+                                 'reset': lambda: appel('reset', {})})
 
     KeyBoardListener(
         {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
@@ -56,10 +57,14 @@ def initialisation_jeux():
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(Vector3(300, 100, 1), surface_game_icon,
            lambda: Interface.change_interface('game'))
-    
-    lie(lambda: Enigme.create(SequentialEnigme), 'sequence') # type: ignore
-    lie(lambda: Enigme.create(BinomialEnigme), 'binomiale') # type: ignore
-    lie(lambda: Enigme.create(GeometricEnigme), 'geometrie') # type: ignore
+
+    lie(lambda: Enigme.create(SequentialEnigme), 'sequence')  # type: ignore
+    lie(lambda: Enigme.create(BinomialEnigme), 'binomiale')  # type: ignore
+    lie(lambda: Enigme.create(GeometricEnigme), 'geometrie')  # type: ignore
+
+    Brique(Vector3(200, 200, 2, 'centre'), 'game')
+    Brique(Vector3(500, 300, 2, 'centre'), 'game')
+    Brique(Vector3(300, 300, 2, 'centre'), 'game')
 
 
 def initialisation():

@@ -251,7 +251,7 @@ class GeometricEnigme(EnigmeGenerateur):
         """génère l'énigme"""
         res: List[List[Tuple[int, int, int]]] = []
         # à remettre bien
-        for ind in range(self.size ** 2):
+        for ind in range(self.size ** 2 - 1):
             coefficients: List[Tuple[int, int, int]] = []
 
             for indx in range(3):

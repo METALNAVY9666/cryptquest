@@ -50,7 +50,7 @@ class Sequence:
 
     def __init__(self, seq: List[Tuple[Tuple[Callable[..., None], List[Any]] | None, float]],
                  loop: bool = False, local: bool = False) -> None:
-        
+
         self.seq_infos: Dict[str, Any] = {
             "fnct": [],
             "times": [],
@@ -81,7 +81,7 @@ class Sequence:
     def update(self):
         """met à jour la séquence"""
         if not self.seq_infos["is_running"] or (self.seq_infos['times'][self.seq_infos['pointer']] >
-                                   pygame.time.get_ticks() - self.seq_infos["sqc_timer"]):
+                                                pygame.time.get_ticks() - self.seq_infos["sqc_timer"]):
             return False
 
         fnct = self.seq_infos['fnct'][self.seq_infos['pointer']]
@@ -136,6 +136,13 @@ class Interface:
         self.elements.insert(index, element)
         element.elm_infos["interface"] = self
 
+    def resort(self, element: 'Element'):
+        """replace un élément"""
+        self.elements.remove(element)
+        index: int = dichotomie(
+            [elm.pos.z for elm in self.elements], element.pos.z)
+        self.elements.insert(index, element)
+
     def remove_element(self, element: 'Element'):
         """retire un élément de la liste"""
         self.elements.remove(element)
@@ -148,15 +155,19 @@ class Interface:
 
     def on_click(self, event: pygame.event.Event):
         """gestion des cliques"""
-        for elm in self.elements:
-            if hasattr(elm.elm_infos["objet"], 'on_click'):
+        for elm in self.elements[::-1]:
+            if (hasattr(elm.elm_infos["objet"], 'on_click') and
+                    elm.elm_infos['rect'].collidepoint(pygame.mouse.get_pos())):
                 elm.elm_infos["objet"].on_click(event)
+                return
 
     def on_declick(self, event: pygame.event.Event):
         """gestion du relachement du clique"""
-        for elm in self.elements:
-            if hasattr(elm.elm_infos["objet"], 'on_declick'):
+        for elm in self.elements[::-1]:
+            if (hasattr(elm.elm_infos["objet"], 'on_declick') and
+                    elm.elm_infos['rect'].collidepoint(pygame.mouse.get_pos())):
                 elm.elm_infos["objet"].on_declick(event)
+                return
 
     def update(self):
         for elm in self.elements:
@@ -189,7 +200,7 @@ class Element:
 
     def __init__(self, objet: Any, surface: pygame.Surface, rectangle: pygame.Rect,
                  interface_nom: str | None = None) -> None:
-        
+
         self.elm_infos: Dict[str, Any] = {
             "surface": surface,
             "rect": rectangle,
@@ -220,7 +231,7 @@ class Element:
 
         self.pos: Vector3 | RelativePos = self.elm_infos['objet'].pos
 
-        ancre = self.pos.aligne # type: ignore
+        ancre = self.pos.aligne  # type: ignore
 
         self.elm_infos['rect'].center = vect2_to_tuple(self.pos.xy)
         if 'top' in ancre:
@@ -398,7 +409,7 @@ class Bouton:
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
-        if self.element.elm_infos["rect"].collidepoint(event.pos) and self.click == event.button:
+        if self.click == event.button:
             self.fnct()
 
 
@@ -415,5 +426,7 @@ class Texte:
 
     def update(self):
         """fonction de mise à jour"""
-        self.element.elm_infos["surface"] = self.police.render(self.texte, True, self.color)
-        self.element.elm_infos["rect"] = self.element.elm_infos["surface"].get_rect()
+        self.element.elm_infos["surface"] = self.police.render(
+            self.texte, True, self.color)
+        self.element.elm_infos["rect"] = self.element.elm_infos["surface"].get_rect(
+        )
