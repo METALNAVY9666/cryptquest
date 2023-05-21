@@ -40,7 +40,60 @@ def dichotomie(liste: List[float], valeur: float):
     return start + 1 if valeur > liste[start] else start
 
 
+def relpos_to_absolute(pos: 'Vector3'):
+    """
+    transforme une position relative à
+    une frame en une position écran
+    """
+    return Frame.current_tl_pos.xy + pos.xy
+
+
+def absolute_to_relpos(pos: 'Vector3'):
+    """transforme une position
+    absolue en position relative"""
+    return pos.xy - Frame.current_tl_pos.xy
+
+
 # classes
+
+
+@dataclass
+class Vector3(pygame.Vector3):
+    """vecteur 3D"""
+
+    x: float
+    y: float
+    z: float
+    aligne: str = 'topleft'
+
+
+class RelativePos:
+    """
+    classe de représentation
+    des positions variables
+    """
+    default_window: pygame.Surface
+
+    def __init__(self, relx: float, rely: float, posz: int,
+                 aligne: str = 'centre', window: pygame.Surface | None = None) -> None:
+        self.relx, self.rely = relx, rely
+        self.x: float
+        self.y: float
+        self.z = posz
+        self.aligne = aligne
+        self.window = window if window is not None else RelativePos.default_window
+        self.update()
+
+    @property
+    def xy(self):
+        """renvoie les composantes xy du vecteur position"""
+        return pygame.Vector2(self.x, self.y)
+
+    def update(self):
+        """méthode de mise à jour"""
+
+        self.x = self.relx * self.window.get_width()
+        self.y = self.rely * self.window.get_height()
 
 
 class Sequence:
@@ -127,6 +180,7 @@ class Interface:
         self.elements: List['Element'] = []
 
         if nom is not None:
+            self.nom = nom
             Interface.interfaces[nom] = self
 
     def add_element(self, element: 'Element'):
@@ -157,7 +211,8 @@ class Interface:
         """gestion des cliques"""
         for elm in self.elements[::-1]:
             if (hasattr(elm.elm_infos["objet"], 'on_click') and
-                    elm.elm_infos['rect'].collidepoint(pygame.mouse.get_pos())):
+                    elm.elm_infos['rect'].collidepoint(absolute_to_relpos(
+                        Vector3(*pygame.mouse.get_pos(), 0)))):
                 elm.elm_infos["objet"].on_click(event)
                 return
 
@@ -165,7 +220,8 @@ class Interface:
         """gestion du relachement du clique"""
         for elm in self.elements[::-1]:
             if (hasattr(elm.elm_infos["objet"], 'on_declick') and
-                    elm.elm_infos['rect'].collidepoint(pygame.mouse.get_pos())):
+                    elm.elm_infos['rect'].collidepoint(absolute_to_relpos(
+                        Vector3(*pygame.mouse.get_pos(), 0)))):
                 elm.elm_infos["objet"].on_declick(event)
                 return
 
@@ -266,6 +322,9 @@ class Frame:
     d'élément dans un cadre
     """
 
+    current_frame: 'None | Frame' = None
+    current_tl_pos: Vector3 = Vector3(0, 0, 0)
+
     frames: Dict[str, 'Frame'] = {}
 
     def __init__(self, nom: str, interface: Interface, surface: pygame.Surface,
@@ -278,57 +337,52 @@ class Frame:
         self.element = Element(self, surface, self.rect, interface_nom)
 
         if nom not in Frame.frames:
+            self.nom = nom
             Frame.frames[nom] = self
+
+    def recursive_position(self, fonction: Callable[..., Any]):
+        """traque la position de manière récursive"""
+        def tracer(*args: ..., **kwargs: ...):
+            """trace la position"""
+            # on active la frame mise à jour
+            backup = Frame.current_frame
+            Frame.current_frame = self
+            Frame.current_tl_pos.xy += Vector3(*self.element.elm_infos['rect'].topleft, 0).xy # type: ignore
+
+            # update
+            fonction(*args, **kwargs)
+
+            # on désactive la frame mise à jour
+            Frame.current_frame = backup
+            Frame.current_tl_pos.xy -= Vector3(*self.element.elm_infos['rect'].topleft, 0).xy # type: ignore
+        return tracer
 
     def on_keypress(self, event: pygame.event.Event):
         """gestion des touches"""
-        self.interface.on_keypress(event)
+        self.recursive_position(self.interface.on_keypress)(event)
+
+    def on_click(self, event: pygame.event.Event):
+        """gestion des cliques"""
+        self.recursive_position(self.interface.on_click)(event)
+
+    def on_declick(self, event: pygame.event.Event):
+        """gestion du relachement des cliques"""
+        self.recursive_position(self.interface.on_declick)(event)
+
+    def destroy(self):
+        """détruit la frame"""
+        del Frame.frames[self.nom]
+        self.element.destroy()
 
     def update(self):
         """méthode de mise à jour"""
         # clear
         self.surface.blit(self.backup, (0, 0))
-        self.interface.update()
+
+        # update
+        self.recursive_position(self.interface.update)()
+
         self.surface.blits(list(self.interface.render()))
-
-
-@dataclass
-class Vector3(pygame.Vector3):
-    """vecteur 3D"""
-
-    x: float
-    y: float
-    z: float
-    aligne: str = 'topleft'
-
-
-class RelativePos:
-    """
-    classe de représentation
-    des positions variables
-    """
-    default_window: pygame.Surface
-
-    def __init__(self, relx: float, rely: float, posz: int,
-                 aligne: str = 'centre', window: pygame.Surface | None = None) -> None:
-        self.relx, self.rely = relx, rely
-        self.x: float
-        self.y: float
-        self.z = posz
-        self.aligne = aligne
-        self.window = window if window is not None else RelativePos.default_window
-        self.update()
-
-    @property
-    def xy(self):
-        """renvoie les composantes xy du vecteur position"""
-        return pygame.Vector2(self.x, self.y)
-
-    def update(self):
-        """méthode de mise à jour"""
-
-        self.x = self.relx * self.window.get_width()
-        self.y = self.rely * self.window.get_height()
 
 
 class StaticElement(Element):
@@ -341,6 +395,14 @@ class StaticElement(Element):
     def update(self):
         """surécrit la méthode pour la désactiver"""
         return
+
+
+class StaticModel:
+    """gestion des éléments visuels invariables"""
+
+    def __init__(self, surface: pygame.Surface, pos: Vector3 | RelativePos, interface_nom: str) -> None:
+        self.pos = pos
+        self.element = StaticElement(self, surface, interface_nom)
 
 
 class AnimElement(Element):
@@ -399,18 +461,19 @@ class AnimElement(Element):
 class Bouton:
     """classe de représentation d'un bouton"""
 
-    def __init__(self, pos: Vector3 | RelativePos, surface: pygame.Surface, fnct: Callable[[], None],
-                 interface_nom: str | None = None, click: int = 1) -> None:
+    def __init__(self, pos: Vector3 | RelativePos, surface: pygame.Surface, fnct: Callable[..., Any],
+                 interface_nom: str | None = None, click: int = 1, data: Dict[str, Any] = {}) -> None:
         self.pos = pos
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
         self.fnct = fnct
         self.click = click
+        self.data = data
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
         if self.click == event.button:
-            self.fnct()
+            self.fnct(**self.data)
 
 
 class Texte:
@@ -423,6 +486,10 @@ class Texte:
         surface = police.render(self.texte, True, color)
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
+        
+    def ajoute_lettre(self, lettre: str):
+        """ajoute une lettre"""
+        self.texte += lettre
 
     def update(self):
         """fonction de mise à jour"""
@@ -430,3 +497,35 @@ class Texte:
             self.texte, True, self.color)
         self.element.elm_infos["rect"] = self.element.elm_infos["surface"].get_rect(
         )
+
+
+class Draggable:
+    """objet qu'on peut bouger"""
+
+    dragged: 'None | Draggable' = None
+
+    def __init__(self, pos: Vector3, surface: pygame.Surface, interface_nom: str) -> None:
+        self.pos = pos
+        self.state = 0
+        self.element = Element(
+            self, surface, surface.get_rect(), interface_nom)
+
+    def on_click(self, event: pygame.event.Event):
+        """gestion du clique"""
+        if event.button == 1:
+            Draggable.dragged = self
+            self.state = 1
+            self.pos.z += 1
+            self.element.elm_infos['interface'].resort(self.element)
+
+    def on_declick(self, event: pygame.event.Event):
+        """gestion du relachement du clique"""
+        self.state = 0
+        self.pos.z -= 1
+        self.element.elm_infos['interface'].resort(self.element)
+        Draggable.dragged = None
+
+    def update(self):
+        """méthode de mise à jour"""
+        if self.state:
+            self.element.pos.x, self.element.pos.y = absolute_to_relpos(Vector3(*pygame.mouse.get_pos(), 0))

@@ -8,10 +8,10 @@ from modules.graphics import Element, StaticElement, Vector3
 
 # système observeur
 
-evenement: Dict[str, List[Callable[..., None]]] = {}
+evenement: Dict[str, List[Callable[..., Any]]] = {}
 
 
-def lie(fnct: Callable[..., None], nom: str):
+def lie(fnct: Callable[..., Any], nom: str):
     """lie une fonction à un événement"""
     if nom in evenement:
         evenement[nom].append(fnct)
@@ -19,7 +19,7 @@ def lie(fnct: Callable[..., None], nom: str):
         evenement[nom] = [fnct]
 
 
-def delie(fnct: Callable[..., None], nom: str):
+def delie(fnct: Callable[..., Any], nom: str):
     """délie une fonction d'un événement"""
     if nom in evenement and fnct in evenement[nom]:
         evenement[nom].remove(fnct)
@@ -37,7 +37,9 @@ def appel(nom: str, data: Dict[str, Any]):
     if not nom in evenement:
         return
     
-    for fnct in evenement[nom]:
+    appel_stack = evenement[nom][:]
+    
+    for fnct in appel_stack:
         fnct(**data)
 
 

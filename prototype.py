@@ -3,11 +3,11 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos, Vector3
-from modules.applications import Shell, Dialogue, load_dialogue, Brique
+from modules.applications import Shell, Dialogue, load_dialogue
 from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
                             lie, appel)
 
-from modules.enigmes import SequentialEnigme, BinomialEnigme, Enigme, GeometricEnigme
+from modules import enigmes
 
 WINDOW = pygame.display.set_mode((1080, 720))
 RelativePos.default_window = WINDOW
@@ -57,14 +57,8 @@ def initialisation_jeux():
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(Vector3(300, 100, 1), surface_game_icon,
            lambda: Interface.change_interface('game'))
-
-    lie(lambda: Enigme.create(SequentialEnigme), 'sequence')  # type: ignore
-    lie(lambda: Enigme.create(BinomialEnigme), 'binomiale')  # type: ignore
-    lie(lambda: Enigme.create(GeometricEnigme), 'geometrie')  # type: ignore
-
-    Brique(Vector3(200, 200, 2, 'centre'), 'game')
-    Brique(Vector3(500, 300, 2, 'centre'), 'game')
-    Brique(Vector3(300, 300, 2, 'centre'), 'game')
+    
+    enigmes.initialisation()
 
 
 def initialisation():
