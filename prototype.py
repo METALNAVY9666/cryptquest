@@ -58,6 +58,8 @@ def initialisation_jeux():
     Bouton(Vector3(300, 100, 1), surface_game_icon,
            lambda: Interface.change_interface('game'))
     
+    BackGround(pygame.image.load('ressources/img/background/desktop.jpg'), WINDOW, interface_nom='game')
+    
     enigmes.initialisation()
 
 

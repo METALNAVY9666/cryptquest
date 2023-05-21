@@ -351,6 +351,8 @@ class Enigme:
         si la valeur est correcte, trigger l'événement donné
         et supprime l'énigme"""
 
+        print(valeur, self.solution)
+
         if not valeur == self.solution:
             return False
 
