@@ -106,6 +106,10 @@ class Editeur:
         if self.owner is not None and hasattr(self.owner, 'on_keypress'):
             self.owner.on_keypress(event)
 
+    def ajoute_texte(self, texte: str):
+        """ajoute du texte"""
+        self.texte += texte
+
     def update(self):
         """mise à jour de l'objet"""
         textes = self.texte.split('\n')
@@ -248,7 +252,7 @@ class Noeud:
     def arrive(self):
         """exécuter lors de l'arrivée sur ce noeud"""
         # cas particulier lié au jeu
-        if 'sequence' in self.triggers or 'binomiale' in self.triggers or 'geometrie' in self.triggers:
+        if any(val in self.triggers for val in ('binomiale', 'geometrique', 'sequence', 'chemin')):
             self.prerequis['enigme_resolu'] = False
             lie(lambda **_: set_dct(True, 'enigme_resolu', self.prerequis), 'enigme_resolu')
 

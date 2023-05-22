@@ -3,9 +3,8 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos, Vector3
-from modules.applications import Shell, Dialogue, load_dialogue
-from modules.outils import (BackGround, KeyBoardListener, Noeud, Editeur,
-                            lie, appel)
+from modules.applications import Shell, load_dialogue, Reseau, Dialogue, Noeud, aide
+from modules.outils import (BackGround, KeyBoardListener, Editeur, appel, lie)
 
 from modules import enigmes
 
@@ -38,9 +37,13 @@ def initialisation_shell():
 
     BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
 
-    texte = Editeur(Vector3(100, 50, 1), '', POLICE, 600, 20, 'shell')
+    texte = Editeur(Vector3(100, 50, 1), '', POLICE, 600, 30, 'shell')
+    reseau = Reseau(texte, RelativePos(1, 0, 1, aligne='topright'), 'shell')
     Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {}),
-                                 'reset': lambda: appel('reset', {})})
+                                 'reset': lambda: appel('reset', {}),
+                                 'scan': reseau.scan,
+                                 'hack': reseau.hack,
+                                 'help': lambda: aide(texte)})
 
     KeyBoardListener(
         {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
@@ -48,6 +51,8 @@ def initialisation_shell():
 
 def initialisation_jeux():
     """initialisation du coeur principale"""
+    lie(lambda: Dialogue(RelativePos(0.5, 1, 1, aligne='bottom'), Noeud.get_by_nom('A'), POLICE, 'game'), 'lancement')
+
     Interface('game')
 
     KeyBoardListener(
@@ -77,11 +82,6 @@ def initialisation():
     # dialogues à changer
     with open('ressources/data/dialogue.json', 'r', encoding="utf-8") as fichier:
         load_dialogue(fichier)
-
-    lie(lambda **_: print('ok'), "test2")
-
-    Dialogue(RelativePos(0.5, 0, 1, aligne='top'),
-             Noeud.get_by_nom('A'), POLICE, 'game')
 
 
 def handle_event(events: List[pygame.event.Event]):
