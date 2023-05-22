@@ -29,7 +29,7 @@ def initialisation_bureaux():
         surface_shell_icon, 0.4)
 
     Bouton(Vector3(100, 100, 1), surface_shell_icon,
-           lambda: Interface.change_interface('shell'), interface_nom='bureau')
+           fonction = lambda: Interface.change_interface('shell'), interface_nom='bureau')
 
 
 def initialisation_shell():
@@ -56,7 +56,7 @@ def initialisation_jeux():
     surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(Vector3(300, 100, 1), surface_game_icon,
-           lambda: Interface.change_interface('game'))
+           fonction = lambda: Interface.change_interface('game'), interface_nom='bureau')
     
     BackGround(pygame.image.load('ressources/img/background/desktop.jpg'), WINDOW, interface_nom='game')
     
@@ -64,11 +64,7 @@ def initialisation_jeux():
 
 
 def initialisation():
-    # initialisation du mot de passe
-    with open('ressources/files/file.txt') as file:
-        # self.mdp = CrypteurPair.decode_AES(file.readlines()[0])
-        mdp = file.readlines()[0]
-
+    """initialisation"""
     # bureaux
     initialisation_bureaux()
 
@@ -78,7 +74,7 @@ def initialisation():
     # jeu
     initialisation_jeux()
 
-    # dialogues
+    # dialogues à changer
     with open('ressources/data/dialogue.json', 'r', encoding="utf-8") as fichier:
         load_dialogue(fichier)
 

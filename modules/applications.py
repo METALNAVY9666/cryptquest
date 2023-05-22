@@ -61,7 +61,7 @@ class Dialogue:
                            self.noeud.valeur, interface_nom)
 
         self.bouton = Bouton(pos, pygame.Surface(self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA),
-                             self.next, interface_nom=interface_nom)
+                             fonction=self.next, interface_nom=interface_nom)
 
     def next(self):
         """passe au dialogue suivant"""

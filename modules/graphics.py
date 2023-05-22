@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import List, Any, Tuple, Dict, Callable
 import pygame
 
+pygame.init = pygame.init
 pygame.init()
-
 
 # constantes
 
@@ -32,7 +32,7 @@ def dichotomie(liste: List[float], valeur: float):
         mid = (start + end) // 2
         if liste[mid] == valeur:
             return mid
-        elif liste[mid] > valeur:
+        if liste[mid] > valeur:
             end = mid
         else:
             start = mid + 1
@@ -74,13 +74,13 @@ class RelativePos:
     """
     default_window: pygame.Surface
 
-    def __init__(self, relx: float, rely: float, posz: int,
-                 aligne: str = 'centre', window: pygame.Surface | None = None) -> None:
+    def __init__(self, relx: float, rely: float, posz: int, **args: Any) -> None:
         self.relx, self.rely = relx, rely
         self.x: float
         self.y: float
         self.z = posz
-        self.aligne = aligne
+        self.aligne = args.get('aligne', 'centre')
+        window = args.get('window')
         self.window = window if window is not None else RelativePos.default_window
         self.update()
 
@@ -101,7 +101,8 @@ class Sequence:
 
     sequences: List['Sequence']
 
-    def __init__(self, seq: List[Tuple[Tuple[Callable[..., None], List[Any]] | None, float]],
+    def __init__(self, seq: List[Tuple[Tuple[Callable[..., None],
+                                             List[Any]] | None, float]],
                  loop: bool = False, local: bool = False) -> None:
 
         self.seq_infos: Dict[str, Any] = {
@@ -133,8 +134,9 @@ class Sequence:
 
     def update(self):
         """met à jour la séquence"""
-        if not self.seq_infos["is_running"] or (self.seq_infos['times'][self.seq_infos['pointer']] >
-                                                pygame.time.get_ticks() - self.seq_infos["sqc_timer"]):
+        if (not self.seq_infos["is_running"] or
+            (self.seq_infos['times'][self.seq_infos['pointer']] >
+             pygame.time.get_ticks() - self.seq_infos["sqc_timer"])):
             return False
 
         fnct = self.seq_infos['fnct'][self.seq_infos['pointer']]
@@ -226,6 +228,7 @@ class Interface:
                 return
 
     def update(self):
+        """mise à jour"""
         for elm in self.elements:
             if hasattr(elm.elm_infos["objet"], 'update'):
                 elm.elm_infos["objet"].update()
@@ -308,7 +311,8 @@ class Element:
         if "objet" in self.elm_infos and hasattr(self.elm_infos["objet"], 'rotation'):
             # en degrés
             self.elm_infos["surface"] = pygame.transform.rotate(
-                self.elm_infos["surface"], self.elm_infos["objet"].rotation - self.backup_rotation)
+                self.elm_infos["surface"],
+                self.elm_infos["objet"].rotation - self.backup_rotation)
             self.backup_rotation = self.elm_infos["objet"].rotation
 
     def render(self):
@@ -327,15 +331,15 @@ class Frame:
 
     frames: Dict[str, 'Frame'] = {}
 
-    def __init__(self, nom: str, interface: Interface, surface: pygame.Surface,
-                 pos: 'Vector3 | RelativePos', interface_nom: str | None = None) -> None:
+    def __init__(self, interface: Interface, surface: pygame.Surface,
+                 pos: 'Vector3 | RelativePos', **args: str) -> None:
         self.surface = surface
         self.backup = surface.copy()
         self.rect = self.surface.get_rect()
         self.pos = pos
         self.interface = interface
-        self.element = Element(self, surface, self.rect, interface_nom)
-
+        self.element = Element(self, surface, self.rect, args.get('interface_nom'))
+        nom = args.get('nom', 'sans_nom')
         if nom not in Frame.frames:
             self.nom = nom
             Frame.frames[nom] = self
@@ -347,14 +351,18 @@ class Frame:
             # on active la frame mise à jour
             backup = Frame.current_frame
             Frame.current_frame = self
-            Frame.current_tl_pos.xy += Vector3(*self.element.elm_infos['rect'].topleft, 0).xy # type: ignore
+            # type: ignore
+            Frame.current_tl_pos.xy += Vector3(
+                *self.element.elm_infos['rect'].topleft, 0).xy
 
             # update
             fonction(*args, **kwargs)
 
             # on désactive la frame mise à jour
             Frame.current_frame = backup
-            Frame.current_tl_pos.xy -= Vector3(*self.element.elm_infos['rect'].topleft, 0).xy # type: ignore
+            # type: ignore
+            Frame.current_tl_pos.xy -= Vector3(
+                *self.element.elm_infos['rect'].topleft, 0).xy
         return tracer
 
     def on_keypress(self, event: pygame.event.Event):
@@ -388,7 +396,8 @@ class Frame:
 class StaticElement(Element):
     """création d'un modèle immuable"""
 
-    def __init__(self, objet: Any, surface: pygame.Surface, interface_nom: str | None = None) -> None:
+    def __init__(self, objet: Any, surface: pygame.Surface,
+                 interface_nom: str | None = None) -> None:
         super().__init__(objet, surface, surface.get_rect(), interface_nom)
         self.ancre()
 
@@ -400,7 +409,8 @@ class StaticElement(Element):
 class StaticModel:
     """gestion des éléments visuels invariables"""
 
-    def __init__(self, surface: pygame.Surface, pos: Vector3 | RelativePos, interface_nom: str) -> None:
+    def __init__(self, surface: pygame.Surface, pos: Vector3 | RelativePos,
+                 interface_nom: str) -> None:
         self.pos = pos
         self.element = StaticElement(self, surface, interface_nom)
 
@@ -433,7 +443,8 @@ class AnimElement(Element):
     def start_anim(self, nom: str):
         """déclenche une animation"""
         self.seq = Sequence(
-            [((self.set_current_texture, [tpl[0]]), tpl[1]) for tpl in self.textures[nom]])
+            [((self.set_current_texture, [tpl[0]]), tpl[1])
+             for tpl in self.textures[nom]])
         self.seq.start()
 
     def check_next_anim(self) -> Tuple[pygame.Surface, bool]:
@@ -461,14 +472,23 @@ class AnimElement(Element):
 class Bouton:
     """classe de représentation d'un bouton"""
 
-    def __init__(self, pos: Vector3 | RelativePos, surface: pygame.Surface, fnct: Callable[..., Any],
-                 interface_nom: str | None = None, click: int = 1, data: Dict[str, Any] = {}) -> None:
+    def __init__(self, pos: Vector3 | RelativePos,
+                 surface: pygame.Surface, interface_nom: str, **args: Any) -> None:
         self.pos = pos
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
-        self.fnct = fnct
-        self.click = click
-        self.data = data
+
+        fnct: Callable[..., Any] | None = args.get('fonction')
+        if fnct is not None:
+            self.fnct = fnct
+        else:
+            raise KeyError
+
+        click = args.get('click')
+        self.click = click if click is not None else 1
+
+        data: Dict[str, Any] | None = args.get('data')
+        self.data = data if data is not None else {}
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
@@ -479,14 +499,15 @@ class Bouton:
 class Texte:
     """gestion des textes"""
 
-    def __init__(self, pos: Vector3 | RelativePos, police: pygame.font.Font, color: str, texte: str = "", interface_nom: str | None = None) -> None:
+    def __init__(self, pos: Vector3 | RelativePos, police: pygame.font.Font,
+                 color: str, texte: str = "", interface_nom: str | None = None) -> None:
         self.texte = texte
         self.pos = pos
         self.police, self.color = police, color
         surface = police.render(self.texte, True, color)
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
-        
+
     def ajoute_lettre(self, lettre: str):
         """ajoute une lettre"""
         self.texte += lettre
@@ -528,4 +549,5 @@ class Draggable:
     def update(self):
         """méthode de mise à jour"""
         if self.state:
-            self.element.pos.x, self.element.pos.y = absolute_to_relpos(Vector3(*pygame.mouse.get_pos(), 0))
+            self.element.pos.x, self.element.pos.y = absolute_to_relpos(
+                Vector3(*pygame.mouse.get_pos(), 0))
