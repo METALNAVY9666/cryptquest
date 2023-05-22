@@ -10,7 +10,7 @@ import pygame
 
 from modules.graphics import (StaticElement, RelativePos, Draggable,
                               Vector3, Frame, Interface, StaticModel, absolute_to_relpos,
-                              Bouton, Texte)
+                              Bouton, Texte, Element)
 from modules.outils import appel, lie, vide, delie
 
 # chargement
@@ -63,6 +63,22 @@ def extract(parametre: str, typ: str):
             DIFFICULTE_DCT[DIFFICULTE_NV][typ][parametre]['max'])
 
 
+def est_subliste(testeur: list[int], testand: list[int]):
+    """renvoie vrai si la liste operande est une sous liste"""
+    taille = len(testand)
+    return any(testeur[indice:taille + indice] == testand
+               for indice, _ in enumerate(testeur[:-taille + 1]))
+
+
+def check(liste: list[int]):
+    """vérifie qu'il n'y a pas deux fois la même paire dans la liste"""
+    for indice, element in enumerate(liste):
+        if indice > 0 and (est_subliste(liste[indice:], [liste[indice - 1], element])
+                           or est_subliste(liste[indice:], [element, liste[indice - 1]])):
+            return True
+    return False
+
+
 class EnigmeGenerateur(ABC):
     """génération des énigmes"""
 
@@ -74,8 +90,12 @@ class EnigmeGenerateur(ABC):
         """génère la solution"""
         ...
 
-    def generate(self) -> List[Any]:
+    def generate(self) -> Any:
         """génère une séquence"""
+        ...
+
+    def comparaison(self, valeur: Any, solution: Any) -> bool:
+        """compare les résultats"""
         ...
 
     @classmethod
@@ -111,6 +131,10 @@ class BinomialEnigme(EnigmeGenerateur):
     def generate(self) -> List[float]:
         """génère la séquence de l'énigme"""
         return self.sequence(self.parametre['entree'] + [0] * (self.quantite - self.profondeur))
+    
+    def comparaison(self, valeur: Any, solution: Any):
+        """compare les résultats"""
+        return valeur == solution
 
     @classmethod
     def create(cls) -> 'BinomialEnigme':
@@ -155,6 +179,10 @@ class SequentialEnigme(EnigmeGenerateur):
         """génère la solution"""
         return hex(SequentialEnigme.operation(self.last_value, self.parametre['mult'],
                                               self.parametre['div']))[2:]
+    
+    def comparaison(self, valeur: Any, solution: Any):
+        """compare les résultats"""
+        return valeur == solution
 
     @classmethod
     def create(cls) -> 'SequentialEnigme':
@@ -164,6 +192,53 @@ class SequentialEnigme(EnigmeGenerateur):
         depart = random.randint(*extract('depart', 'sequence'))
 
         return SequentialEnigme(quantite, mult, depart)
+
+
+def sequence_to_frame(sequence: List[str | float]):
+    """transforme une séquence en frame"""
+    # on ajoute le point d'interrogation pour l'esthétique
+    sequence.append("?")
+
+    taille_surface = 380
+    offset = 10
+    nombre = len(sequence)
+
+    background = DCT_SURFACE['background_numerique']
+    interface_enigme = Interface('enigme')
+
+    unite = (taille_surface - offset) / nombre - offset
+
+    for indice, elm in enumerate(sequence):
+        zone_carre = pygame.Surface(
+            (round(unite), round(unite)), pygame.SRCALPHA)
+        zone_carre_rect = zone_carre.get_rect()
+        surf_elm = POLICE.render(str(elm), True, '#FFFFFF')
+        rect = surf_elm.get_rect()
+        rect.center = zone_carre_rect.center
+
+        zone_carre.blit(surf_elm, rect)
+
+        StaticModel(zone_carre, Vector3(644, 34 + offset +
+                    (offset + unite) * indice, 1, 'top'), 'enigme')
+
+    # ajout des boutons
+
+    texte_reponse = Texte(Vector3(224, 79, 1, 'centre'),
+                          POLICE, '#000000', interface_nom='enigme')
+    Bouton(Vector3(351, 351, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
+           fonction=lambda: appel('essai', {'valeur': texte_reponse.texte}), interface_nom='enigme')
+
+    Bouton(Vector3(351, 293, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
+           fonction=lambda: setattr(texte_reponse, 'texte', ''), interface_nom='enigme')
+
+    # boutons de 0 à F
+    for value in range(16):
+        Bouton(Vector3(111 + (50 + 8) * (value % 4), 350 - (50 + 8) * (value // 4), 1),
+               pygame.Surface(
+                   (50, 50), pygame.SRCALPHA), fonction=texte_reponse.ajoute_lettre,
+               interface_nom='enigme', data=(None, {'lettre': hex(value)[2:]}))
+
+    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
 
 
 class GeometricCombinaison:
@@ -331,47 +406,16 @@ class GeometricEnigme(EnigmeGenerateur):
         """génère la solution"""
         solution = self.calcule_solution()
         return self.filtre(solution)
+    
+    def comparaison(self, valeur: Any, solution: Any):
+        """compare les résultats"""
+        return valeur == solution
 
 
-class Enigme:
-    """classe de gestion graphique des énigmes"""
-
-    current_enigme: 'None | Enigme' = None
-
-    def __init__(self, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]) -> None:
-        self.serie = generateur.generate()
-        self.solution = generateur.generate_solution()
-
-        self.frame = sequence_to_frame(self.serie)
-
-        lie(self.essaie, 'essaie')
-
-    def essaie(self, valeur: Any) -> bool:
-        """vérifie si la solution donnée est la bonne:
-        si la valeur est correcte, trigger l'événement donné
-        et supprime l'énigme"""
-
-        print(valeur, self.solution)
-
-        if not valeur == self.solution:
-            return False
-
-        vide('essaie')
-        appel('enigme_resolu', {})
-        self.frame.destroy()
-        Enigme.current_enigme = None
-
-        return True
-
-    @classmethod
-    def create(cls, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]):
-        cls.current_enigme = cls(generateur.create(), sequence_to_frame)
-
-
-def tableau_to_frame(tableau: List[List[Tuple[int, int, int]]]):
-    """transforme un tableau carré 2d de taille donnée en surface"""
+def geometrique_to_frame(tableau: List[List[Tuple[int, int, int]]]):
+    """transforme un tableau carré 2d de taille donnée en frame"""
     nombre = round((len(tableau) + 1) ** 0.5)
-    offset = 30
+    offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
 
     taille_surface = 373
 
@@ -403,51 +447,192 @@ def tableau_to_frame(tableau: List[List[Tuple[int, int, int]]]):
     return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
 
 
-def liste_to_frame(sequence: List[str | float]):
-    """transforme une liste en surface"""
-    # on ajoute le point d'interrogation pour l'esthétique
-    sequence.append("?")
+class ListeValidation:
+    """liste de valeurs affichées"""
 
-    taille_surface = 380
-    offset = 10
-    nombre = len(sequence)
+    def __init__(self, pos: Vector3 | RelativePos, listes: Tuple[List[Any], List[Any]],
+                 surface: pygame.Surface, interface_nom: str) -> None:
+        self.listeur, self.listand = listes
 
-    background = DCT_SURFACE['background_numerique']
-    interface_enigme = Interface('enigme')
+        self.pos = pos
+        self.backup_surface = surface.copy()
+        self.element = Element(self, surface, surface.get_rect(), interface_nom)
+    
+    def calc_surf(self):
+        """calcule la surface"""
+        # vertical
+        nombre = len(self.listeur)
+        offset = 15
 
-    unite = (taille_surface - offset) / nombre - offset
+        surface: pygame.Surface = self.backup_surface
 
-    for indice, elm in enumerate(sequence):
-        zone_carre = pygame.Surface(
-            (round(unite), round(unite)), pygame.SRCALPHA)
-        zone_carre_rect = zone_carre.get_rect()
-        surf_elm = POLICE.render(str(elm), True, '#FFFFFF')
-        rect = surf_elm.get_rect()
-        rect.center = zone_carre_rect.center
+        unite = round((surface.get_height() - offset) / nombre - offset)
 
-        zone_carre.blit(surf_elm, rect)
+        for num, valeur in enumerate(self.listeur):
+            surf = POLICE.render(str(valeur), True, '#32E024' if valeur in self.listand else '#000000')
+            rect = surf.get_rect()
+            rect.centerx = surface.get_width() // 2
+            rect.top = offset + (unite + offset) * num
+            surface.blit(surf, rect)
+        
+        return surface
+    
+    def update(self):
+        """mise à jour"""
+        self.element.elm_infos['surface'] = self.calc_surf()
 
-        StaticModel(zone_carre, Vector3(644, 34 + offset +
-                    (offset + unite) * indice, 1, 'top'), 'enigme')
 
-    # ajout des boutons
+class PathEnigme(EnigmeGenerateur):
+    """énigme de chemin"""
 
-    texte_reponse = Texte(Vector3(224, 79, 1, 'centre'),
-                          POLICE, '#000000', interface_nom='enigme')
-    Bouton(Vector3(351, 351, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
-           fonction=lambda: appel('essaie', {'valeur': texte_reponse.texte}), interface_nom='enigme')
+    DIFFICULTE_IND = ['simple', 'intermediaire', 'difficile']
 
-    Bouton(Vector3(351, 293, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
-           fonction=lambda: setattr(texte_reponse, 'texte', ''), interface_nom='enigme')
+    def __init__(self, size: int, path_size: int) -> None:
+        self.size = size
+        self.path_size = path_size
+        self.solution, self.sequence = self.generate_path()
 
-    # boutons de 0 à F
-    for value in range(16):
-        Bouton(Vector3(111 + (50 + 8) * (value % 4), 350 - (50 + 8) * (value // 4), 1),
-               pygame.Surface(
-                   (50, 50), pygame.SRCALPHA), fonction=texte_reponse.ajoute_lettre,
-               interface_nom='enigme', data={'lettre': hex(value)[2:]})
+        self.tableau: List[List[str]]
+
+        while check(self.solution):
+            self.solution, self.sequence = self.generate_path()
+
+    def generate_path(self):
+        """génère le chemin"""
+        solution: List[int] = []
+        sequence: List[int] = []
+
+        solution.append(random.randint(0, self.size - 1))
+
+        for _ in range(self.path_size):
+            solution.append(random.randint(0, self.size - 1))
+            sequence.append(random.randint(0, 255))
+        return solution, sequence
+
+    def generate(self) -> Tuple[List[int], List[List[str]]]:
+        """génère l'énigme"""
+        tableau: List[List[str]] = [
+            ["" for _ in range(self.size)] for _ in range(self.size)]
+        possibilites = self.sequence + \
+            [random.randint(0, 255) for _ in range(8)]
+
+        for indicey in range(self.size):
+            for indicex in range(self.size):
+                tableau[indicey][indicex] = hex(
+                    random.choice(possibilites))[2:]
+
+        pre: None | int = None
+        for ind, valeur in enumerate(self.solution):
+            if pre is not None and ind % 2:
+                tableau[pre][valeur] = hex(self.sequence[ind - 1])[2:]
+            elif not (pre is None or ind % 2):
+                tableau[valeur][pre] = hex(self.sequence[ind - 1])[2:]
+            pre = valeur
+
+        # on redonne à l'objet le tableau pour la comparaison
+        self.tableau = tableau
+
+        return self.sequence, tableau
+
+    def generate_solution(self) -> Any:
+        """génère une solution"""
+        return [(valeur, self.solution[indice + 1]) if indice % 2 else (self.solution[indice + 1], valeur)
+                for indice, valeur in enumerate(self.solution[:-1])]
+    
+    def comparaison(self, valeur: Any, solution: Any):
+        """compare les résultats"""
+        # on fait toutes les comparaisons nécessaires aux vérifications de validité
+        return all(self.tableau[position[1]][position[0]] ==
+                   self.tableau[solution[indice][1]][solution[indice][0]] and
+                   (indice == 0 or (position[0] == valeur[indice - 1][0]
+                    if indice % 2 else position[1] == valeur[indice - 1][1]))
+                   for indice, position in enumerate(valeur)) # type: ignore
+
+    @classmethod
+    def create(cls) -> 'PathEnigme':
+        difficulte = cls.DIFFICULTE_IND.index(DIFFICULTE_NV)
+        return cls(difficulte * 2 + 3, difficulte * 2 + 3)
+
+
+def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
+    """transforme une énigme chemin en frame"""
+
+    solution_essai: List[Tuple[int, int]] = []
+    sequence_essai: List[str] = []
+
+    def ajoute_valeur(posx: int, posy: int, valeur: str):
+        """ajoute une valeur aux listes"""
+        solution_essai.append((posx, posy))
+        sequence_essai.append(valeur)
+
+    def nettoie():
+        """vide les deux listes"""
+        sequence_essai.clear()
+        solution_essai.clear()
+
+    sequence, tableau = serie
+    sequence = [hex(valeur)[2:] for valeur in sequence]
+
+    nombre = len(tableau)
+    offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
+
+    taille_surface = 368
+
+    interface_enigme = Interface("enigme")
+
+    background = DCT_SURFACE['background_chemin']
+    unite = round((taille_surface - offset) / nombre - offset)
+
+    for posy, liste in enumerate(tableau):
+        for posx, valeur in enumerate(liste):
+            surf = POLICE.render(valeur, True, '#000000')
+
+            Bouton(Vector3(392 + (unite + offset) * posx + offset, 40 + (unite + offset) * posy + offset, 1), surf,
+                   fonction=ajoute_valeur, data=([posx, posy, valeur], None), interface_nom='enigme')
+
+    Bouton(Vector3(256, 376, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
+           fonction=lambda: appel('essai', {'valeur': solution_essai}), interface_nom='enigme')
+
+    Bouton(Vector3(256, 24, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
+           fonction=nettoie, interface_nom='enigme')
+    
+    ListeValidation(Vector3(40, 40, 1), (sequence, sequence_essai), pygame.Surface((128, 368), pygame.SRCALPHA), 'enigme')
 
     return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
+
+
+class Enigme:
+    """classe de gestion graphique des énigmes"""
+
+    current_enigme: 'None | Enigme' = None
+
+    def __init__(self, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]) -> None:
+        self.generateur = generateur
+        self.serie = generateur.generate()
+        self.solution = generateur.generate_solution()
+
+        self.frame = sequence_to_frame(self.serie)
+
+        lie(self.essai, 'essai')
+
+    def essai(self, valeur: Any) -> bool:
+        """vérifie si la solution donnée est la bonne:
+        si la valeur est correcte, trigger l'événement donné
+        et supprime l'énigme"""
+
+        if not self.generateur.comparaison(valeur, self.solution):
+            return False
+
+        vide('essai')
+        appel('enigme_resolu', {})
+        self.frame.destroy()
+        Enigme.current_enigme = None
+
+        return True
+
+    @classmethod
+    def create(cls, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]):
+        cls.current_enigme = cls(generateur.create(), sequence_to_frame)
 
 
 class Brique(Draggable):
@@ -547,7 +732,7 @@ class DropZone:
         for elm in Brique.briques:
             if (elm != Draggable.dragged and
                     self.element.elm_infos['rect'].colliderect(elm.element.elm_infos['rect'])):
-                appel('essaie', {'valeur': elm.coefficient})
+                appel('essai', {'valeur': elm.coefficient})
                 return
 
 
@@ -556,16 +741,22 @@ def initialisation():
     # initilisation des éléments graphiques
     path_geometrique = 'ressources/img/background/fond_geometrique.png'
     path_numerique = 'ressources/img/background/fond_numerique.png'
+    path_chemin = 'ressources/img/background/fond_chemin.png'
 
     DCT_SURFACE['background_geometrique'] = pygame.image.load(
         path_geometrique).convert_alpha()
 
     DCT_SURFACE['background_numerique'] = pygame.image.load(
         path_numerique).convert_alpha()
+    
+    DCT_SURFACE['background_chemin'] = pygame.image.load(
+        path_chemin).convert_alpha()
 
-    lie(lambda: Enigme.create(SequentialEnigme, liste_to_frame),  # type: ignore
+    lie(lambda: Enigme.create(SequentialEnigme, sequence_to_frame),  # type: ignore
         'sequence')
-    lie(lambda: Enigme.create(BinomialEnigme, liste_to_frame),  # type: ignore
+    lie(lambda: Enigme.create(BinomialEnigme, sequence_to_frame),  # type: ignore
         'binomiale')
-    lie(lambda: Enigme.create(GeometricEnigme, tableau_to_frame),  # type: ignore
+    lie(lambda: Enigme.create(GeometricEnigme, geometrique_to_frame),  # type: ignore
         'geometrie')
+    lie(lambda: Enigme.create(PathEnigme, path_to_frame),  # type: ignore
+        'chemin')

@@ -473,7 +473,8 @@ class Bouton:
     """classe de représentation d'un bouton"""
 
     def __init__(self, pos: Vector3 | RelativePos,
-                 surface: pygame.Surface, interface_nom: str, **args: Any) -> None:
+                 surface: pygame.Surface, *, interface_nom: str,
+                 data: Tuple[List[Any] | None, Dict[str, Any] | None] = (None, None), **args: Any) -> None:
         self.pos = pos
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
@@ -487,13 +488,14 @@ class Bouton:
         click = args.get('click')
         self.click = click if click is not None else 1
 
-        data: Dict[str, Any] | None = args.get('data')
-        self.data = data if data is not None else {}
+        self.nkdata = data[0] if data[0] is not None else []
+        self.kdata = data[1] if data[1] is not None else {}
+
 
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
         if self.click == event.button:
-            self.fnct(**self.data)
+            self.fnct(*self.nkdata, **self.kdata)
 
 
 class Texte:

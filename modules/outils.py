@@ -266,7 +266,7 @@ class Noeud:
         """passe au noeud suivant"""
         if not all(self.prerequis.values()) or len([enfant for enfant in self.children 
                                                     if all(enfant.in_prerequis)]) == 0:
-            return
+            return None
 
         noeud = self.children[0]
 
@@ -277,7 +277,7 @@ class Noeud:
                     raise ValueError
                 
                 if not all(noeud.in_prerequis.values()):
-                    return
+                    return None
 
             case 'random':
                 noeud = random.choice([enfant for enfant in self.children if
