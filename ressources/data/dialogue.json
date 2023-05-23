@@ -90,7 +90,7 @@
           "CA",
           "END1"
         ],
-        "triggers": [
+        "triggers sortants": [
           "partie1"
         ]
       },
@@ -100,7 +100,7 @@
           "BA",
           "END1"
         ],
-        "triggers": [
+        "triggers sortants": [
           "partie1"
         ]
       },

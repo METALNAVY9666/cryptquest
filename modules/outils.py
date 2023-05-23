@@ -1,5 +1,5 @@
 """module outils"""
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 import random
 
 import pygame
@@ -246,7 +246,7 @@ class Noeud:
 
         self.prerequis: Dict[str, bool] = {'default': True}
         self.in_prerequis: Dict[str, bool] = {'default': True}
-        self.triggers: List[str] = []
+        self.triggers: Tuple[List[str], List[str]] = ([], [])
 
         Noeud.noeuds[nom] = self
 
@@ -255,7 +255,7 @@ class Noeud:
         self.children = [Noeud.get_by_nom(enfant) for enfant in enfants]
 
     def set_mode(self, mode: str, in_prerequis: List[str],
-                 prerequis: List[str], triggers: List[str]):
+                 prerequis: List[str], triggers: Tuple[List[str], List[str]]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
@@ -263,30 +263,33 @@ class Noeud:
             prerequis_nom = nom if 'non ' not in nom else nom[4:]
             self.prerequis[prerequis_nom] = 'non ' in nom
             lie(lambda name=prerequis_nom, dct=self.prerequis,
-                **_: set_dct('non ' not in nom, name, dct),  # type: ignore
+                **_: set_dct(not self.prerequis[prerequis_nom], name, dct),  # type: ignore
+                prerequis_nom)
+            lie(lambda name=prerequis_nom, dct=self.prerequis,
+                **_: print(not self.prerequis[prerequis_nom], name, dct),  # type: ignore
                 prerequis_nom)
 
         for nom in in_prerequis:
             prerequis_nom = nom if 'non ' not in nom else nom[4:]
             self.in_prerequis[prerequis_nom] = 'non ' in nom
-            lie(lambda name=prerequis_nom, dct=self.in_prerequis,
-                **_: set_dct('non ' not in nom, name, dct),  # type: ignore
-                prerequis_nom)
 
         # les triggers déclenche les événements de type None -> None
-        for nom in triggers:
-            self.triggers.append(nom)
+        for nom in triggers[0]:
+            self.triggers[0].append(nom)
+        for nom in triggers[1]:
+            self.triggers[1].append(nom)
 
     def arrive(self):
         """exécuter lors de l'arrivée sur ce noeud"""
         # cas particulier lié au jeu
-        if any(val in self.triggers for val in ('binomiale', 'geometrique', 'sequence', 'chemin')):
+        if any(val in self.triggers[0] for val in ('binomiale', 'geometrique',
+                                                   'sequence', 'chemin')):
             self.prerequis['enigme_resolu'] = False
             lie(lambda **_: set_dct(True, 'enigme_resolu',
                 self.prerequis), 'enigme_resolu')
 
         # on active les triggers du noeud enfant
-        for nom in self.triggers:
+        for nom in self.triggers[0]:
             appel(nom, {})
 
     def quitte(self):
@@ -295,9 +298,12 @@ class Noeud:
         if 'enigme_resolu' in self.prerequis:
             vide('enigme_resolu')
 
+        # on active les triggers du noeud enfant
+        for nom in self.triggers[1]:
+            appel(nom, {})
+
     def suivant(self):
         """passe au noeud suivant"""
-        print(self.prerequis)
         if not all(self.prerequis.values()) or len([enfant for enfant in self.children
                                                     if all(enfant.in_prerequis)]) == 0:
             return None
@@ -320,8 +326,6 @@ class Noeud:
             case _:
                 # clef incorrect
                 raise KeyError
-        print('out')
-        print(noeud.valeur)
         self.quitte()
         noeud.arrive()
 

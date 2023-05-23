@@ -118,7 +118,7 @@ class Reseau:
             self.machines.append(".".join(lst))
 
         if nb_machines == 0:
-            self.texte.ajoute_texte(f'  Aucune machine sur le réseau\n')
+            self.texte.ajoute_texte('  Aucune machine sur le réseau\n')
 
         for machine in self.machines:
             self.texte.ajoute_texte(f'  machine: {machine}\n')
@@ -163,11 +163,13 @@ def load_dialogue(dialogue_file: TextIO):
         in_prerequis: List[str] = (relations["prerequis entrant"]
                                    if "prerequis entrant" in relations else [])
         triggers: List[str] = relations["triggers"] if "triggers" in relations else []
+        out_triggers: List[str] = (relations["triggers sortants"]
+                                   if "triggers sortants" in relations else [])
         end: List[str] = relations['end'] if "end" in relations else []
         typ: str = relations['type'] if "end" in relations else "exact"
 
         noeud.set_enfant(end)
-        noeud.set_mode(typ, in_prerequis, prerequis, triggers)
+        noeud.set_mode(typ, in_prerequis, prerequis, (triggers, out_triggers))
 
 
 def aide(texte: Editeur):
@@ -179,3 +181,4 @@ def aide(texte: Editeur):
     texte.ajoute_texte("    ls <= complète un événement\n")
     texte.ajoute_texte('    scan <= scan le réseau\n')
     texte.ajoute_texte("    tutoriel <= lance le tutoriel\n")
+    texte.ajoute_texte("    reset <= réinitialise les formes géométriques\n")

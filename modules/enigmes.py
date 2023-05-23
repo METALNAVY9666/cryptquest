@@ -1,7 +1,7 @@
 """module de gestion des énigmes"""
 
 from abc import ABC
-from typing import List, Dict, Any, Tuple, Callable, Set
+from typing import List, Dict, Any, Tuple, Callable
 import random
 import math
 import json
@@ -22,8 +22,6 @@ pygame.K_r: int
 
 with open('ressources/data/difficulte.json', 'r', encoding='utf-8') as file:
     DIFFICULTE_DCT = json.load(file)
-
-DIFFICULTE_NV: str = 'intermediaire'
 
 DCT_SURFACE: Dict[str, pygame.Surface] = {}
 
@@ -64,8 +62,9 @@ def extract(parametre: str, typ: str):
     clef dans le dictionnaire de difficulté
     """
     # raise KeyError volontaire si la clef n'existe pas
-    return (DIFFICULTE_DCT[DIFFICULTE_NV][typ][parametre]['min'],
-            DIFFICULTE_DCT[DIFFICULTE_NV][typ][parametre]['max'])
+    key = ['simple', 'intermediaire', 'difficile'][Enigme.difficulte_nv]
+    return (DIFFICULTE_DCT[key][typ][parametre]['min'],
+            DIFFICULTE_DCT[key][typ][parametre]['max'])
 
 
 def est_subliste(testeur: list[int], testand: list[int]):
@@ -213,16 +212,9 @@ def sequence_to_frame(sequence: List[str | float]):
     unite = (taille_surface - offset) / nombre - offset
 
     for indice, elm in enumerate(sequence):
-        zone_carre = pygame.Surface(
-            (round(unite), round(unite)), pygame.SRCALPHA)
-        zone_carre_rect = zone_carre.get_rect()
         surf_elm = POLICE.render(str(elm), True, '#FFFFFF')
-        rect = surf_elm.get_rect()
-        rect.center = zone_carre_rect.center
 
-        zone_carre.blit(surf_elm, rect)
-
-        StaticModel(zone_carre, Vector3(644, 34 + offset +
+        StaticModel(surf_elm, Vector3(644, 34 + offset +
                     (offset + unite) * indice, 1, 'top'), 'enigme')
 
     # ajout des boutons
@@ -230,13 +222,15 @@ def sequence_to_frame(sequence: List[str | float]):
     texte_reponse = Texte(Vector3(224, 79, 1, 'centre'),
                           police=POLICE, couleur='#000000', interface_nom='enigme')
     Bouton(Vector3(351, 351, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
-           fonction=lambda: appel('essai', {'valeur': texte_reponse.texte}), interface_nom='enigme')
+           fonction=lambda: appel('essai', {'valeur': texte_reponse.texte}),
+           interface_nom='enigme')
 
     Bouton(Vector3(351, 293, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=lambda: setattr(texte_reponse, 'texte', ''), interface_nom='enigme')
-    
+
     Bouton(Vector3(351, 235, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
-           fonction=texte_reponse.ajoute_lettre, data=(None, {'lettre': '-'}), interface_nom='enigme')
+           fonction=texte_reponse.ajoute_lettre, data=(None, {'lettre': '-'}),
+           interface_nom='enigme')
 
     # boutons de 0 à F
     for value in range(16):
@@ -320,8 +314,6 @@ class GeometricCombinaison:
 class GeometricEnigme(EnigmeGenerateur):
     """génération d'énigme géométrique"""
 
-    difficulte_ind = ['difficile', 'intermediaire', 'simple']
-
     def __init__(self, size: int) -> None:
         super().__init__()
         self.shape_variation = [random.randint(0, len(GeometricCombinaison.shapes) - 1),
@@ -345,7 +337,7 @@ class GeometricEnigme(EnigmeGenerateur):
 
     @classmethod
     def create(cls) -> EnigmeGenerateur:
-        return cls(cls.difficulte_ind.index(DIFFICULTE_NV) + 2)
+        return cls(4 - Enigme.difficulte_nv)
 
     def generate(self) -> List[List[Tuple[int, int, int]]]:
         """génère l'énigme"""
@@ -436,9 +428,9 @@ class GeometricEnigme(EnigmeGenerateur):
 def geometrique_to_frame(tableau: List[List[Tuple[int, int, int]]]):
     """transforme un tableau carré 2d de taille donnée en frame"""
     nombre = round((len(tableau) + 1) ** 0.5)
-    offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
+    offset = 20 + 20 * Enigme.difficulte_nv
 
-    taille_surface = 373
+    taille_surface = 384
 
     interface_enigme = Interface("enigme")
 
@@ -452,13 +444,14 @@ def geometrique_to_frame(tableau: List[List[Tuple[int, int, int]]]):
         if abs(surf.get_width() - unite) > 2:
             surf = pygame.transform.scale(surf, (unite, unite))
 
-        StaticModel(surf, Vector3(389 + (unite + offset) * (ind % nombre) + offset,
-                                  42 + (unite + offset) * (ind // nombre) + offset, 1),
+        StaticModel(surf, Vector3(384 + (unite + offset) * (ind % nombre) + offset,
+                                  32 + (unite + offset) * (ind // nombre) + offset, 1),
                     'enigme')
 
     # on ajoute la zone de solution
-    DropZone(Vector3(389 + (unite + offset) * ((len(tableau)) % nombre),
-                     42 + (unite + offset) * ((len(tableau)) // nombre), 1), unite, 'enigme')
+    DropZone(Vector3(384 + offset + (unite + offset) * ((len(tableau)) % nombre),
+                     32 + offset + (unite + offset) * ((len(tableau)) // nombre), 1),
+             unite, 'enigme')
 
     # on ajoute les éléments de solution
     Brique(Vector3(32 + 71, 32 + 96, 2, aligne='centre'), unite, 'enigme')
@@ -485,7 +478,7 @@ class ListeValidation:
         """calcule la surface"""
         # vertical
         nombre = len(self.listeur)
-        offset = 15
+        offset = 10 + 20 * (3 - Enigme.difficulte_nv)
 
         surface: pygame.Surface = self.backup_surface
 
@@ -508,8 +501,6 @@ class ListeValidation:
 
 class PathEnigme(EnigmeGenerateur):
     """énigme de chemin"""
-
-    DIFFICULTE_IND = ['simple', 'intermediaire', 'difficile']
 
     def __init__(self, size: int, path_size: int) -> None:
         super().__init__()
@@ -576,8 +567,7 @@ class PathEnigme(EnigmeGenerateur):
 
     @classmethod
     def create(cls) -> 'PathEnigme':
-        difficulte = cls.DIFFICULTE_IND.index(DIFFICULTE_NV)
-        return cls(difficulte * 2 + 3, difficulte * 2 + 3)
+        return cls(Enigme.difficulte_nv * 2 + 3, Enigme.difficulte_nv * 2 + 3)
 
 
 def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
@@ -599,7 +589,7 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
     sequence, tableau = serie
     sequence = [hex(valeur)[2:] for valeur in sequence]
 
-    offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
+    offset = 10 + 20 * (2 - Enigme.difficulte_nv)
 
     interface_enigme = Interface("enigme")
 
@@ -609,8 +599,8 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
         for posx, valeur in enumerate(liste):
             surf = POLICE.render(valeur, True, '#000000')
 
-            Bouton(Vector3(392 + (unite + offset) * posx + offset, 40 +
-                           (unite + offset) * posy + offset, 1), surf,
+            Bouton(Vector3(392 + (unite + offset) * posx + offset + 0.5 * unite, 40 +
+                           (unite + offset) * posy + offset + 0.5 * unite, 1, 'centre'), surf,
                    fonction=ajoute_valeur, data=([posx, posy, valeur], None),
                    interface_nom='enigme')
 
@@ -623,7 +613,8 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
     ListeValidation(Vector3(40, 40, 1), (sequence, sequence_essai),
                     pygame.Surface((128, 368), pygame.SRCALPHA), 'enigme')
 
-    return Frame(interface_enigme, DCT_SURFACE['background_chemin'].copy(), RelativePos(0.5, 0.5, 1),
+    return Frame(interface_enigme, DCT_SURFACE['background_chemin'].copy(),
+                 RelativePos(0.5, 0.5, 1),
                  nom='enigme', interface_nom='game')
 
 
@@ -631,6 +622,7 @@ class Enigme:
     """classe de gestion graphique des énigmes"""
 
     current_enigme: 'None | Enigme' = None
+    difficulte_nv: int = 0
 
     def __init__(self, generateur: EnigmeGenerateur,
                  sequence_to_frame_function: Callable[[Any], Frame]) -> None:
@@ -655,19 +647,29 @@ class Enigme:
         self.frame.destroy()
         Enigme.current_enigme = None
 
+        # on détruit les briques potentielles
+        while len(Brique.briques) > 0:
+            Brique.briques[0].destroy()
+
         return True
 
     @classmethod
     def create(cls, generateur: EnigmeGenerateur,
                sequence_to_frame_function: Callable[[Any], Frame]):
         """crée l'objet"""
-        cls.current_enigme = cls(generateur.create(), sequence_to_frame_function)
+        cls.current_enigme = cls(
+            generateur.create(), sequence_to_frame_function)
+
+    @classmethod
+    def inc_difficulte(cls):
+        """augmente la difficulté"""
+        cls.difficulte_nv += 1
 
 
 class Brique(Draggable):
     """classe de gestion de brique élémentaire géométrique"""
 
-    briques: Set['Brique'] = set()
+    briques: List['Brique'] = []
 
     def __init__(self, pos: Vector3, size: int, interface_nom: str,
                  composant: List[List[int]] | None = None) -> None:
@@ -677,7 +679,7 @@ class Brique(Draggable):
         self.coefficient = composant if composant is not None else [[0, 0, 0]]
         self.freeze = False
 
-        Brique.briques.add(self)
+        Brique.briques.append(self)
         lie(self.reset, 'reset')
 
     def destroy(self):
@@ -755,6 +757,7 @@ class DropZone:
         self.pos = pos
         surface = pygame.Surface(
             (size, size), pygame.SRCALPHA)
+        surface.fill('#156531')
         self.element = StaticElement(self, surface, interface_nom)
 
     def update(self):
@@ -793,3 +796,4 @@ def initialisation():
         'geometrique')
     lie(lambda: Enigme.create(PathEnigme, path_to_frame),  # type: ignore
         'chemin')
+    lie(Enigme.inc_difficulte, 'levelup')
