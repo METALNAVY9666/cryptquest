@@ -11,6 +11,12 @@ from modules import enigmes
 WINDOW = pygame.display.set_mode((1080, 600))
 RelativePos.default_window = WINDOW
 
+pygame.K_ESCAPE: int
+pygame.QUIT: int
+pygame.KEYDOWN: int
+pygame.MOUSEBUTTONUP: int
+pygame.MOUSEBUTTONDOWN: int
+
 
 # fonctions
 
@@ -28,7 +34,7 @@ def initialisation_bureaux():
         surface_shell_icon, 0.4)
 
     Bouton(Vector3(100, 100, 1), surface_shell_icon,
-           fonction = lambda: Interface.change_interface('shell'), interface_nom='bureau')
+           fonction=lambda: Interface.change_interface('shell'), interface_nom='bureau')
 
 
 def initialisation_shell():
@@ -51,7 +57,8 @@ def initialisation_shell():
 
 def initialisation_jeux():
     """initialisation du coeur principale"""
-    lie(lambda: Dialogue(RelativePos(0.5, 1, 1, aligne='bottom'), Noeud.get_by_nom('A'), POLICE, 'game'), 'lancement')
+    lie(lambda: Dialogue(RelativePos(0.5, 1, 1, aligne='bottom'),
+                         Noeud.get_by_nom('A'), POLICE, 'game'), 'lancement')
 
     Interface('game')
 
@@ -61,10 +68,11 @@ def initialisation_jeux():
     surface_game_icon = pygame.image.load('ressources/img/icons/game.png')
     surface_game_icon = pygame.transform.smoothscale_by(surface_game_icon, 0.4)
     Bouton(Vector3(300, 100, 1), surface_game_icon,
-           fonction = lambda: Interface.change_interface('game'), interface_nom='bureau')
-    
-    BackGround(pygame.image.load('ressources/img/background/desktop.jpg'), WINDOW, interface_nom='game')
-    
+           fonction=lambda: Interface.change_interface('game'), interface_nom='bureau')
+
+    BackGround(pygame.image.load(
+        'ressources/img/background/desktop.jpg'), WINDOW, interface_nom='game')
+
     enigmes.initialisation()
 
 
@@ -102,6 +110,7 @@ def handle_event(events: List[pygame.event.Event]):
 
 
 def update():
+    """mise à jour globale du jeu"""
     WINDOW.fill('#000000')
     Interface.current_interface.update()
     WINDOW.blits(Interface.current_interface.render())
@@ -113,9 +122,15 @@ initialisation()
 
 # boucle principale
 
-running = True
 
-while running:
-    running = handle_event(pygame.event.get())
-    update()
-    pygame.display.flip()
+def main():
+    """main"""
+    running = True
+
+    while running:
+        running = handle_event(pygame.event.get())
+        update()
+        pygame.display.flip()
+
+
+main()
