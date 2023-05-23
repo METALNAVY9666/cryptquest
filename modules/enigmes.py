@@ -687,6 +687,7 @@ class Brique(Draggable):
                     ...
 
     def on_declick(self, event: pygame.event.Event):
+        """déclique"""
         super().on_declick(event)
         self.stack()
 
