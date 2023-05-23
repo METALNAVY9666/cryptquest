@@ -21,7 +21,7 @@ class Shell:
         self.header = header
         self.texte.texte = self.header
         self.texte.avance(len(self.header))
-        self.texte.protected_curseur_pos = self.texte.curseur
+        self.texte.curseur['private'] = self.texte.curseur['public']
 
         self.commandes = commandes
         self.texte.owner = self
@@ -53,12 +53,12 @@ class Shell:
                 if random.randint(0, 9) == 7:
                     self.texte.ajoute_texte("   lis la doc stp")
                 else:
-                    self.texte.ajoute_texte("   paramètres érronés\n")
+                    self.texte.ajoute_texte("   paramètres erronés\n")
 
         # on crée le prochain header
         self.texte.texte += self.header
         self.texte.avance(len(self.texte.texte) - len(backup_texte))
-        self.texte.protected_curseur_pos = self.texte.curseur
+        self.texte.curseur['private'] = self.texte.curseur['public']
 
 
 class Dialogue:
@@ -73,7 +73,7 @@ class Dialogue:
 
         self.bouton = self.init_button(pos, interface_nom)
 
-    def init_button(self, pos, interface_nom):
+    def init_button(self, pos: Vector3 | RelativePos, interface_nom: str) -> Bouton:
         """initialise le bouton"""
         size = self.texte.element.elm_infos["surface"].get_size()
         surface = pygame.Surface(size, pygame.SRCALPHA)
@@ -117,6 +117,9 @@ class Reseau:
 
             self.machines.append(".".join(lst))
 
+        if nb_machines == 0:
+            self.texte.ajoute_texte(f'  Aucune machine sur le réseau\n')
+
         for machine in self.machines:
             self.texte.ajoute_texte(f'  machine: {machine}\n')
 
@@ -127,11 +130,11 @@ class Reseau:
             return
 
         chance = random.random()
-        if chance > 0.6:
+        if chance > 0.9:
             self.texte.ajoute_texte(
                 'infection réussite, vole des données réussi\n')
             self.element.texte = f"{int(self.element.texte[:-1]) + random.randint(10, 200)}€"
-        elif 0.4 < chance:
+        elif 0.9 < chance:
             self.texte.ajoute_texte('infection ratée\n')
         else:
             self.texte.ajoute_texte(

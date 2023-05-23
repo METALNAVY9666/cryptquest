@@ -54,14 +54,14 @@ def set_dct(valeur: Any, clef: str, dct: Dict[str, Any]):
 class Editeur:
     """classe de représentation d'un texte"""
 
-    def __init__(self, pos: Vector3, text: dict,
-                 maxi: dict, interface_nom: str | None = None) -> None:
+    def __init__(self, pos: Vector3, text: Dict[str, Any],
+                 maxi: Dict[str, int], interface_nom: str | None = None) -> None:
         # texte: str, police: pygame.font.Font
         self.owner: Any | None = None
 
         self.texte = text["text"]
         self.pos = pos
-        self.curseur = {}
+        self.curseur: Dict[str, int] = {}
         self.curseur["public"] = 0
         self.curseur["private"] = 0
 
@@ -244,8 +244,8 @@ class Noeud:
         self.nom = nom
         self.mode = 'exact'
 
-        self.prerequis: Dict[str, bool] = {}
-        self.in_prerequis: Dict[str, bool] = {}
+        self.prerequis: Dict[str, bool] = {'default': True}
+        self.in_prerequis: Dict[str, bool] = {'default': True}
         self.triggers: List[str] = []
 
         Noeud.noeuds[nom] = self
@@ -260,16 +260,18 @@ class Noeud:
         self.mode = mode
 
         for nom in prerequis:
-            self.prerequis[nom] = False
-            lie(lambda name=nom, **
-                _: set_dct('non ' not in prerequis, name[4:], self.prerequis),
-                nom if 'non ' not in nom else nom[4:])
+            prerequis_nom = nom if 'non ' not in nom else nom[4:]
+            self.prerequis[prerequis_nom] = 'non ' in nom
+            lie(lambda name=prerequis_nom, dct=self.prerequis,
+                **_: set_dct('non ' not in nom, name, dct),  # type: ignore
+                prerequis_nom)
 
         for nom in in_prerequis:
-            self.prerequis[nom] = False
-            lie(lambda name=nom, **_: set_dct('non ' not in in_prerequis,
-                                              name[4:], self.in_prerequis),
-                nom if 'non ' not in nom else nom[4:])
+            prerequis_nom = nom if 'non ' not in nom else nom[4:]
+            self.in_prerequis[prerequis_nom] = 'non ' in nom
+            lie(lambda name=prerequis_nom, dct=self.in_prerequis,
+                **_: set_dct('non ' not in nom, name, dct),  # type: ignore
+                prerequis_nom)
 
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:
@@ -295,6 +297,7 @@ class Noeud:
 
     def suivant(self):
         """passe au noeud suivant"""
+        print(self.prerequis)
         if not all(self.prerequis.values()) or len([enfant for enfant in self.children
                                                     if all(enfant.in_prerequis)]) == 0:
             return None
@@ -317,6 +320,8 @@ class Noeud:
             case _:
                 # clef incorrect
                 raise KeyError
+        print('out')
+        print(noeud.valeur)
         self.quitte()
         noeud.arrive()
 

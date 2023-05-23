@@ -2,24 +2,24 @@
   "noeuds": {
       "A": "Vite, il faut sécuriser ce qu'on peut des fichiers de l'ordinateur ",
       "B": "Commençons par les fichiers personnels",
-      "BA": "",
-      "BB": "",
+      "BA": "BA",
+      "BB": "BB",
       "C": "Commençons par les fichiers critiques",
-      "CA": "",
-      "CB": "",
-      "ENDB": "",
-      "ENDC": "",
-      "END1": "",
-      "D": "tapez la commande ls dans le terminal",
-      "E": "Mince, il va falloir passer la sécurité",
-      "F": "",
-      "G": "",
-      "END2": "",
-      "HA": "",
-      "HB": "",
-      "HC": "",
-      "HD": "",
-      "END": ""
+      "CA": "CA",
+      "CB": "CB",
+      "ENDB": "endB",
+      "ENDC": "endC",
+      "END1": "end1",
+      "D": "D",
+      "E": "E",
+      "F": "F",
+      "G": "G",
+      "END2": "end2",
+      "HA": "HA",
+      "HB": "HB",
+      "HC": "HC",
+      "HD": "HD",
+      "END": "END"
   },
   "relations": {
       "A": {
@@ -39,9 +39,6 @@
           "type": "exact",
           "end": [
               "CA"
-          ],
-          "triggers": [
-              "chemin"
           ]
       },
       "BA": {
@@ -51,6 +48,9 @@
           ],
           "triggers": [
               "chemin"
+          ],
+          "prerequis entrant": [
+            "non partie1"
           ]
       },
       "BB": {
@@ -70,6 +70,9 @@
           ],
           "triggers": [
               "geometrique"
+          ],
+          "prerequis entrant": [
+            "non partie1"
           ]
       },
       "CB": {
@@ -87,8 +90,8 @@
           "CA",
           "END1"
         ],
-        "prerequis entrant": [
-          "non partie1"
+        "triggers": [
+          "partie1"
         ]
       },
       "ENDC": {
@@ -97,8 +100,8 @@
           "BA",
           "END1"
         ],
-        "prerequis entrant": [
-          "non partie1"
+        "triggers": [
+          "partie1"
         ]
       },
       "END1": {
@@ -173,7 +176,7 @@
       "HB": {
         "type": "exact",
         "end": [
-          "HB"
+          "HC"
         ],
         "triggers": [
           "sequence"
@@ -182,7 +185,7 @@
       "HC": {
         "type": "exact",
         "end": [
-          "HB"
+          "HD"
         ],
         "triggers": [
           "chemin"
@@ -191,7 +194,7 @@
       "HD": {
         "type": "exact",
         "end": [
-          "HB"
+          "END"
         ],
         "triggers": [
           "binomiale"

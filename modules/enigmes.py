@@ -207,7 +207,7 @@ def sequence_to_frame(sequence: List[str | float]):
     offset = 10
     nombre = len(sequence)
 
-    background = DCT_SURFACE['background_numerique']
+    background = DCT_SURFACE['background_numerique'].copy()
     interface_enigme = Interface('enigme')
 
     unite = (taille_surface - offset) / nombre - offset
@@ -234,6 +234,9 @@ def sequence_to_frame(sequence: List[str | float]):
 
     Bouton(Vector3(351, 293, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=lambda: setattr(texte_reponse, 'texte', ''), interface_nom='enigme')
+    
+    Bouton(Vector3(351, 235, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
+           fonction=texte_reponse.ajoute_lettre, data=(None, {'lettre': '-'}), interface_nom='enigme')
 
     # boutons de 0 à F
     for value in range(16):
@@ -439,7 +442,7 @@ def geometrique_to_frame(tableau: List[List[Tuple[int, int, int]]]):
 
     interface_enigme = Interface("enigme")
 
-    background = DCT_SURFACE['background_geometrique']
+    background = DCT_SURFACE['background_geometrique'].copy()
     unite = round((taille_surface - offset) / nombre - offset)
 
     for ind, valeur in enumerate(tableau):
@@ -620,7 +623,7 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
     ListeValidation(Vector3(40, 40, 1), (sequence, sequence_essai),
                     pygame.Surface((128, 368), pygame.SRCALPHA), 'enigme')
 
-    return Frame(interface_enigme, DCT_SURFACE['background_chemin'], RelativePos(0.5, 0.5, 1),
+    return Frame(interface_enigme, DCT_SURFACE['background_chemin'].copy(), RelativePos(0.5, 0.5, 1),
                  nom='enigme', interface_nom='game')
 
 
@@ -787,6 +790,6 @@ def initialisation():
     lie(lambda: Enigme.create(BinomialEnigme, sequence_to_frame),  # type: ignore
         'binomiale')
     lie(lambda: Enigme.create(GeometricEnigme, geometrique_to_frame),  # type: ignore
-        'geometrie')
+        'geometrique')
     lie(lambda: Enigme.create(PathEnigme, path_to_frame),  # type: ignore
         'chemin')
