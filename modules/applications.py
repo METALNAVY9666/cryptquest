@@ -15,7 +15,8 @@ from modules.outils import Editeur, Noeud, appel
 class Shell:
     """gestion du shell virtuel"""
 
-    def __init__(self, texte: Editeur, header: str, commandes: Dict[str, Callable[..., Any]]) -> None:
+    def __init__(self, texte: Editeur, header: str,
+        commandes: Dict[str, Callable[..., Any]]) -> None:
         self.texte = texte
         self.header = header
         self.texte.texte = self.header
@@ -49,7 +50,10 @@ class Shell:
             try:
                 self.commandes[commande](*param)
             except TypeError:
-                self.texte.ajoute_texte('   paramètres erronés\n')
+                if random.randint(0, 9) == 7:
+                    self.texte.ajoute_texte("   lis la doc stp")
+                else:
+                    self.texte.ajoute_texte("   paramètres érronés")
 
         # on crée le prochain header
         self.texte.texte += self.header
@@ -67,10 +71,13 @@ class Dialogue:
         self.texte = Texte(pos, police=police, couleur='#FFFFFF',
                            texte=self.noeud.valeur, interface_nom=interface_nom)
 
-        self.bouton = Bouton(pos, pygame.Surface(
-            self.texte.element.elm_infos["surface"].get_size(),
-            pygame.SRCALPHA),
-            fonction=self.next, interface_nom=interface_nom)
+        self.bouton = self.init_button(pos, noeud)
+
+    def init_button(self, pos):
+        """initialise le bouton"""
+        size = self.texte.element.elm_infos["surface"].get_size()
+        surface = pygame.Surface(size, pygame.SRCALPHA)
+        return Bouton(pos, surface, fonction=self.next, interface_nom=interface_nom)
 
     def next(self):
         """passe au dialogue suivant"""
@@ -150,7 +157,8 @@ def load_dialogue(dialogue_file: TextIO):
 
         prerequis: List[str] = relations["prerequis"] if "prerequis" in relations else [
         ]
-        in_prerequis: List[str] = relations["prerequis entrant"] if "prerequis entrant" in relations else []
+        in_prerequis: List[str] = (relations["prerequis entrant"]
+            if "prerequis entrant" in relations else [])
         triggers: List[str] = relations["triggers"] if "triggers" in relations else []
         end: List[str] = relations['end'] if "end" in relations else []
         typ: str = relations['type'] if "end" in relations else "exact"

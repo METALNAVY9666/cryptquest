@@ -36,9 +36,9 @@ def appel(nom: str, data: Dict[str, Any]):
 
     if not nom in evenement:
         return
-    
+
     appel_stack = evenement[nom][:]
-    
+
     for fnct in appel_stack:
         fnct(**data)
 
@@ -55,15 +55,17 @@ class Editeur:
     """classe de représentation d'un texte"""
 
     def __init__(self, pos: Vector3, texte: str, police: pygame.font.Font,
-                 max_width: int, max_lines: int, interface_nom: str | None = None) -> None:
+                 maxi: dict, interface_nom: str | None = None) -> None:
+        # max_width: int, max_lines: int
         self.owner: Any | None = None
 
         self.texte = texte
         self.pos = pos
-        self.curseur: int = 0
-        self.protected_curseur_pos: int = 0
-        self.max_width = max_width
-        self.max_lines = max_lines
+        self.curseur = {}
+        self.curseur["public"] = 0
+        self.curseur["private"] = 0
+        
+        self.max = maxi
         self.police = police
 
         surface = pygame.Surface((0, 0))
@@ -72,13 +74,13 @@ class Editeur:
 
     def avance(self, k: int = 1):
         """avance le curseur"""
-        if self.curseur + k <= len(self.texte):
-            self.curseur += k
+        if self.curseur["public"] + k <= len(self.texte):
+            self.curseur["public"] += k
 
     def recule(self, k: int = 1):
         """recule le curseur"""
-        if self.curseur - k >= 0:
-            self.curseur -= k
+        if self.curseur["public"] - k >= 0:
+            self.curseur["public"] -= k
 
     def on_keypress(self, event: pygame.event.Event):
         """réagit aux événements claviers"""
@@ -88,19 +90,19 @@ class Editeur:
             self.avance()
 
         elif event.key == pygame.K_RETURN:
-            self.texte = self.texte[:self.curseur] + \
-                '\n' + self.texte[self.curseur:]
+            self.texte = self.texte[:self.curseur["public"]] + \
+                '\n' + self.texte[self.curseur["public"]:]
             self.avance()
 
         elif event.key == pygame.K_BACKSPACE:
-            if self.curseur > self.protected_curseur_pos:
-                self.texte = self.texte[:(self.curseur - 1)] + \
-                    self.texte[self.curseur:]
+            if self.curseur["public"] > self.curseur["private"]:
+                self.texte = self.texte[:(self.curseur["public"] - 1)] + \
+                    self.texte[self.curseur["public"]:]
                 self.recule()
 
         elif event.key != pygame.K_ESCAPE:
-            self.texte = self.texte[:self.curseur] + \
-                event.unicode + self.texte[self.curseur:]
+            self.texte = self.texte[:self.curseur["public"]] + \
+                event.unicode + self.texte[self.curseur["public"]:]
             self.avance()
 
         if self.owner is not None and hasattr(self.owner, 'on_keypress'):
@@ -145,14 +147,14 @@ class Editeur:
 
                 # si on a atteint la position du curseur
                 # on sauvegarde sa position
-                if curseur_compteur == self.curseur:
+                if curseur_compteur == self.curseur["public"]:
                     curseur_pos = [somme, (line + lines_sup) * height]
 
             textures.append(self.police.render(
                 textes[line][char_ind_start:], True, '#4AF626'))
             char_ind_start = 0
             curseur_compteur += 1
-            if curseur_compteur == self.curseur:
+            if curseur_compteur == self.curseur["public"]:
                 curseur_pos = [0, (line + lines_sup + 1) * height]
 
         surface = pygame.Surface((max(texture.get_width() for texture in textures) + 2,
@@ -184,8 +186,9 @@ class Editeur:
 class BackGround:
     """gestion de l'arrière plan"""
 
-    def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface, pos: Vector3 = Vector3(0, 0, 0),
-                 interface_nom: str | None = None) -> None:
+    def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface,
+                pos: Vector3 = Vector3(0, 0, 0),
+                interface_nom: str | None = None) -> None:
         self.pos = pos
         self.surface_of = surface_of
         self.element = StaticElement(self, surface, interface_nom)
@@ -233,7 +236,8 @@ class Noeud:
         """enfants du noeud"""
         self.children = [Noeud.get_by_nom(enfant) for enfant in enfants]
 
-    def set_mode(self, mode: str, in_prerequis: List[str], prerequis: List[str], triggers: List[str]):
+    def set_mode(self, mode: str, in_prerequis: List[str],
+        prerequis: List[str], triggers: List[str]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
@@ -248,7 +252,7 @@ class Noeud:
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:
             self.triggers.append(nom)
-    
+
     def arrive(self):
         """exécuter lors de l'arrivée sur ce noeud"""
         # cas particulier lié au jeu
@@ -259,7 +263,7 @@ class Noeud:
         # on active les triggers du noeud enfant
         for nom in self.triggers:
             appel(nom, {})
-    
+
     def quitte(self):
         """exécuter lors du départ du noeud"""
         # cas particulier lié au jeu
@@ -268,7 +272,7 @@ class Noeud:
 
     def suivant(self):
         """passe au noeud suivant"""
-        if not all(self.prerequis.values()) or len([enfant for enfant in self.children 
+        if not all(self.prerequis.values()) or len([enfant for enfant in self.children
                                                     if all(enfant.in_prerequis)]) == 0:
             return None
 
@@ -279,7 +283,7 @@ class Noeud:
                 if len(self.children) > 1:
                     # trop d'enfant, trop de choix
                     raise ValueError
-                
+
                 if not all(noeud.in_prerequis.values()):
                     return None
 
