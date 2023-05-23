@@ -474,7 +474,8 @@ class Bouton:
 
     def __init__(self, pos: Vector3 | RelativePos,
                  surface: pygame.Surface, *, interface_nom: str,
-                 data: Tuple[List[Any] | None, Dict[str, Any] | None] = (None, None), **args: Any) -> None:
+                 data: Tuple[List[Any] | None,
+                 Dict[str, Any] | None] = (None, None), **args: Any) -> None:
         self.pos = pos
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
@@ -501,12 +502,11 @@ class Bouton:
 class Texte:
     """gestion des textes"""
 
-    def __init__(self, pos: Vector3 | RelativePos, police: pygame.font.Font,
-                 color: str, texte: str = "", interface_nom: str | None = None) -> None:
-        self.texte = texte
+    def __init__(self, pos: Vector3 | RelativePos, interface_nom: str | None = None, **kwargs: Any) -> None:
+        self.texte = kwargs.get('texte', '')
         self.pos = pos
-        self.police, self.color = police, color
-        surface = police.render(self.texte, True, color)
+        self.police, self.color = kwargs.get('police', POLICE), kwargs.get('couleur', '#FFFFFF')
+        surface = self.police.render(self.texte, True, self.color)
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
 

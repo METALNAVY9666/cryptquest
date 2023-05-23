@@ -224,7 +224,7 @@ def sequence_to_frame(sequence: List[str | float]):
     # ajout des boutons
 
     texte_reponse = Texte(Vector3(224, 79, 1, 'centre'),
-                          POLICE, '#000000', interface_nom='enigme')
+                          police=POLICE, couleur='#000000', interface_nom='enigme')
     Bouton(Vector3(351, 351, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=lambda: appel('essai', {'valeur': texte_reponse.texte}), interface_nom='enigme')
 

@@ -61,8 +61,8 @@ class Dialogue:
     def __init__(self, pos: Vector3 | RelativePos, noeud: Noeud,
                  police: pygame.font.Font, interface_nom: str) -> None:
         self.noeud = noeud
-        self.texte = Texte(pos, police, '#FFFFFF',
-                           self.noeud.valeur, interface_nom)
+        self.texte = Texte(pos, police=police, couleur='#FFFFFF',
+                           texte=self.noeud.valeur, interface_nom=interface_nom)
 
         self.bouton = Bouton(pos, pygame.Surface(self.texte.element.elm_infos["surface"].get_size(), pygame.SRCALPHA),
                              fonction=self.next, interface_nom=interface_nom)
@@ -91,7 +91,8 @@ class Reseau:
         self.texte = texte
 
         # visualisation de l'argent
-        self.element = Texte(pos, pygame.font.SysFont('Arial', 35, True), '#c521de', '0€', interface_nom)
+        self.element = Texte(pos, police=pygame.font.SysFont('Arial', 35, True), couleur='#c521de',
+                             texte='0€', interface_nom=interface_nom)
 
     def scan(self):
         """simule un scan du réseau"""
@@ -101,9 +102,9 @@ class Reseau:
             lst: List[str] = []
             for _ in range(4):
                 lst.append(str(random.randint(0, 255)))
-            
+
             self.machines.append(".".join(lst))
-        
+
         for machine in self.machines:
             self.texte.ajoute_texte(f'  machine: {machine}\n')
 
@@ -115,12 +116,14 @@ class Reseau:
 
         chance = random.random()
         if chance > 0.6:
-            self.texte.ajoute_texte('infection réussite, vole des données réussi\n')
+            self.texte.ajoute_texte(
+                'infection réussite, vole des données réussi\n')
             self.element.texte = f"{int(self.element.texte[:-1]) + random.randint(10, 200)}€"
         elif 0.4 < chance:
             self.texte.ajoute_texte('infection ratée\n')
         else:
-            self.texte.ajoute_texte('infection désastreuse, machine contaminée\n')
+            self.texte.ajoute_texte(
+                'infection désastreuse, machine contaminée\n')
             appel('lancement', {})
 
 
@@ -154,7 +157,8 @@ def load_dialogue(dialogue_file: TextIO):
 def aide(texte: Editeur):
     """écrit l'aide dans le shell"""
     texte.ajoute_texte('Les commandes disponibles sont :\n')
-    texte.ajoute_texte("    hack -ip <= tente de voler les données d'une machine\n")
+    texte.ajoute_texte(
+        "    hack -ip <= tente de voler les données d'une machine\n")
     texte.ajoute_texte("    help <= affiche l'aide\n")
     texte.ajoute_texte("    ls <= complète un événement\n")
     texte.ajoute_texte('    scan <= scan le réseau\n')

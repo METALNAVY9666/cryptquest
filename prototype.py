@@ -8,7 +8,7 @@ from modules.outils import (BackGround, KeyBoardListener, Editeur, appel, lie)
 
 from modules import enigmes
 
-WINDOW = pygame.display.set_mode((1080, 720))
+WINDOW = pygame.display.set_mode((1080, 600))
 RelativePos.default_window = WINDOW
 
 
