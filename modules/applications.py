@@ -46,7 +46,10 @@ class Shell:
         param: List[Any] = line_split[1:] if len(line_split) > 1 else []
 
         if commande in self.commandes:
-            self.commandes[commande](*param)
+            try:
+                self.commandes[commande](*param)
+            except TypeError:
+                self.texte.ajoute_texte('   paramètres erronés\n')
 
         # on crée le prochain header
         self.texte.texte += self.header

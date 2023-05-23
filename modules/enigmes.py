@@ -718,11 +718,7 @@ class Brique(Draggable):
                     ...
 
     def on_declick(self, event: pygame.event.Event):
-<<<<<<< Updated upstream
-        """déclique"""
-=======
         """déselectionne la figure"""
->>>>>>> Stashed changes
         super().on_declick(event)
         self.stack()
 
