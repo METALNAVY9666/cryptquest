@@ -16,7 +16,7 @@ class Shell:
     """gestion du shell virtuel"""
 
     def __init__(self, texte: Editeur, header: str,
-        commandes: Dict[str, Callable[..., Any]]) -> None:
+                 commandes: Dict[str, Callable[..., Any]]) -> None:
         self.texte = texte
         self.header = header
         self.texte.texte = self.header
@@ -122,7 +122,7 @@ class Reseau:
 
     def hack(self, add_ip: str):
         """simule une infection"""
-        if not add_ip in self.machines:
+        if add_ip not in self.machines:
             self.texte.ajoute_texte('machine inconnue\n')
             return
 
@@ -158,7 +158,7 @@ def load_dialogue(dialogue_file: TextIO):
         prerequis: List[str] = relations["prerequis"] if "prerequis" in relations else [
         ]
         in_prerequis: List[str] = (relations["prerequis entrant"]
-            if "prerequis entrant" in relations else [])
+                                   if "prerequis entrant" in relations else [])
         triggers: List[str] = relations["triggers"] if "triggers" in relations else []
         end: List[str] = relations['end'] if "end" in relations else []
         typ: str = relations['type'] if "end" in relations else "exact"

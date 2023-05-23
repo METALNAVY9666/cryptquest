@@ -34,7 +34,7 @@ def vide(nom: str):
 def appel(nom: str, data: Dict[str, Any]):
     """appelle les fonctions associées"""
 
-    if not nom in evenement:
+    if nom not in evenement:
         return
 
     appel_stack = evenement[nom][:]
@@ -262,14 +262,14 @@ class Noeud:
         for nom in prerequis:
             self.prerequis[nom] = False
             lie(lambda name=nom, **
-                _: set_dct(not 'non ' in prerequis, name[4:], self.prerequis),
-                nom if not 'non ' in nom else nom[4:])
+                _: set_dct('non ' not in prerequis, name[4:], self.prerequis),
+                nom if 'non ' not in nom else nom[4:])
 
         for nom in in_prerequis:
             self.prerequis[nom] = False
-            lie(lambda name=nom, **_: set_dct(not 'non ' in in_prerequis,
+            lie(lambda name=nom, **_: set_dct('non ' not in in_prerequis,
                                               name[4:], self.in_prerequis),
-                                              nom if not 'non ' in nom else nom[4:])
+                nom if 'non ' not in nom else nom[4:])
 
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:
