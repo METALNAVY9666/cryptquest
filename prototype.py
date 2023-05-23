@@ -43,7 +43,9 @@ def initialisation_shell():
 
     BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
 
-    texte = Editeur(Vector3(100, 50, 1), '', POLICE, 600, 30, 'shell')
+    maxs = {"width": 600, "lines": 30}
+    text = {"text": '', "font": POLICE}
+    texte = Editeur(Vector3(100, 50, 1), text, maxs, 'shell')
     reseau = Reseau(texte, RelativePos(1, 0, 1, aligne='topright'), 'shell')
     Shell(texte, r"C:\Users> ", {'ls': lambda: appel('test', {}),
                                  'reset': lambda: appel('reset', {}),

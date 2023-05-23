@@ -54,19 +54,19 @@ def set_dct(valeur: Any, clef: str, dct: Dict[str, Any]):
 class Editeur:
     """classe de représentation d'un texte"""
 
-    def __init__(self, pos: Vector3, texte: str, police: pygame.font.Font,
+    def __init__(self, pos: Vector3, text:dict,
                  maxi: dict, interface_nom: str | None = None) -> None:
-        # max_width: int, max_lines: int
+        # texte: str, police: pygame.font.Font
         self.owner: Any | None = None
 
-        self.texte = texte
+        self.texte = text["text"]
         self.pos = pos
         self.curseur = {}
         self.curseur["public"] = 0
         self.curseur["private"] = 0
-        
+
         self.max = maxi
-        self.police = police
+        self.police = text["font"]
 
         surface = pygame.Surface((0, 0))
         self.element = Element(
@@ -114,17 +114,20 @@ class Editeur:
 
     def update(self):
         """mise à jour de l'objet"""
+        var = {}
         textes = self.texte.split('\n')
         width_surfaces = [[elm[4]
                            for elm in self.police.metrics(texte)] for texte in textes]
 
-        char_ind_start = 0
-        textures: List[pygame.Surface] = []
-        height = self.police.size(self.texte)[1]
-        curseur_surface = pygame.Surface((2, height))
-        curseur_surface.fill('#FFFFFF')
+        var["char ind start"] = 0
+        var["textures"]: List[pygame.Surface] = []
+        var["height"] = self.police.size(self.texte)[1]
 
-        curseur_pos = [0, 0]
+        var["curseur"] = {}
+        var["curseur"]["surface"] = pygame.Surface((2, var["height"]))
+        var["curseur"]["surface"].fill('#FFFFFF')
+
+        var["curseur"]["pos"] = [0, 0]
 
         curseur_compteur = 0
         lines_sup = 0
@@ -138,46 +141,50 @@ class Editeur:
                 curseur_compteur += 1
                 # si la longueur de la ligne dépasse la longueur maximale
                 # on passe à la ligne suivante
-                if somme > self.max_width:
-                    textures.append(self.police.render(
-                        textes[line][char_ind_start:rang], True, '#4AF626'))
-                    char_ind_start = rang
+                if somme > self.max["width"]:
+                    var["textures"].append(self.police.render(
+                        textes[line][var["char ind start"]:rang], True, '#4AF626'))
+                    var["char ind start"] = rang
                     somme = width
                     lines_sup += 1
 
                 # si on a atteint la position du curseur
                 # on sauvegarde sa position
                 if curseur_compteur == self.curseur["public"]:
-                    curseur_pos = [somme, (line + lines_sup) * height]
+                    var["curseur"]["pos"] = [somme, (line + lines_sup) * var["height"]]
 
-            textures.append(self.police.render(
-                textes[line][char_ind_start:], True, '#4AF626'))
-            char_ind_start = 0
+            var["textures"].append(self.police.render(
+                textes[line][var["char ind start"]:], True, '#4AF626'))
+            var["char ind start"] = 0
             curseur_compteur += 1
             if curseur_compteur == self.curseur["public"]:
-                curseur_pos = [0, (line + lines_sup + 1) * height]
+                var["curseur"]["pos"] = [0, (line + lines_sup + 1) * var["height"]]
 
-        surface = pygame.Surface((max(texture.get_width() for texture in textures) + 2,
-                                  self.max_lines * height))
+        surface = pygame.Surface((max(texture.get_width() for texture in var["textures"]) + 2,
+                                  self.max["lines"] * var["height"]))
 
         # devient vrai lorque le texte a atteint la fin de la zone
-        do_move = len(textures) > self.max_lines
-        for line, texture in enumerate(textures):
+        do_move = len(var["textures"]) > self.max["lines"]
+        for line, texture in enumerate(var["textures"]):
             if do_move:
                 surface.blit(
-                    texture, (0, height * (self.max_lines - len(textures) + line)))
+                    texture,
+                    (0,
+                        var["height"] * (self.max["lines"] - len(var["textures"]) + line)
+                    )
+                )
             else:
-                surface.blit(texture, (0, height * line))
+                surface.blit(texture, (0, var["height"] * line))
 
         # on place correctement le curseur
-        offset = (len(textures) - self.max_lines) * height
-        if do_move and curseur_pos[1] >= offset:
-            curseur_pos[1] -= offset
-            surface.blit(curseur_surface, curseur_pos)
+        offset = (len(var["textures"]) - self.max["lines"]) * var["height"]
+        if do_move and var["curseur"]["pos"][1] >= offset:
+            var["curseur"]["pos"][1] -= offset
+            surface.blit(var["curseur"]["surface"], var["curseur"]["pos"])
         elif do_move:
-            surface.blit(curseur_surface, (0, 0))
+            surface.blit(var["curseur"]["surface"], (0, 0))
         else:
-            surface.blit(curseur_surface, curseur_pos)
+            surface.blit(var["curseur"]["surface"], var["curseur"]["pos"])
 
         self.element.elm_infos["surface"] = surface
         self.element.elm_infos["rect"] = surface.get_rect()
@@ -193,10 +200,15 @@ class BackGround:
         self.surface_of = surface_of
         self.element = StaticElement(self, surface, interface_nom)
 
+    def get_surface(self):
+        """renvoie la surface sur fond"""
+        return pygame.transform.smoothscale(
+            self.element.elm_infos["surface"], self.surface_of.get_size())
+
+
     def update(self):
         """mise à jour"""
-        surface = pygame.transform.smoothscale(
-            self.element.elm_infos["surface"], self.surface_of.get_size())
+        surface = self.get_surface()
         self.element.elm_infos["surface"] = surface
         self.element.elm_infos["rect"] = surface.get_rect()
 
@@ -210,9 +222,13 @@ class KeyBoardListener:
         self.element = Element(self, pygame.Surface(
             (0, 0)), pygame.Rect(0, 0, 0, 0), interface_nom)
 
+    def get_bind(self):
+        """renvoie les bindings"""
+        return self.binds
+
     def on_keypress(self, event: pygame.event.Event):
         """écoute le clavier"""
-        if event.key in self.binds:
+        if event.key in self.get_bind():
             self.binds[event.key]()
 
 

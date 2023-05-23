@@ -53,7 +53,7 @@ class Shell:
                 if random.randint(0, 9) == 7:
                     self.texte.ajoute_texte("   lis la doc stp")
                 else:
-                    self.texte.ajoute_texte("   paramètres érronés")
+                    self.texte.ajoute_texte("   paramètres érronés\n")
 
         # on crée le prochain header
         self.texte.texte += self.header
@@ -71,9 +71,9 @@ class Dialogue:
         self.texte = Texte(pos, police=police, couleur='#FFFFFF',
                            texte=self.noeud.valeur, interface_nom=interface_nom)
 
-        self.bouton = self.init_button(pos, noeud)
+        self.bouton = self.init_button(pos, interface_nom)
 
-    def init_button(self, pos):
+    def init_button(self, pos, interface_nom):
         """initialise le bouton"""
         size = self.texte.element.elm_infos["surface"].get_size()
         surface = pygame.Surface(size, pygame.SRCALPHA)
@@ -135,7 +135,7 @@ class Reseau:
             self.texte.ajoute_texte('infection ratée\n')
         else:
             self.texte.ajoute_texte(
-                'infection désastreuse, machine contaminée\n')
+                'infection désastreuse, votre machine est contaminée\n')
             appel('lancement', {})
 
 
