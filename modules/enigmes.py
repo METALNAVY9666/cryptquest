@@ -94,19 +94,15 @@ class EnigmeGenerateur(ABC):
     def generate_solution(self) -> Any:
         """génère la solution"""
 
-
     def generate(self) -> Any:
         """génère une séquence"""
-
 
     def comparaison(self, _valeur: Any, _solution: Any) -> bool:
         """compare les résultats"""
 
-
     @classmethod
     def create(cls) -> 'EnigmeGenerateur':
         """crée une instance du générateur selon la difficulté"""
-
 
 
 class BinomialEnigme(EnigmeGenerateur):
@@ -602,7 +598,6 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
 
     offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
 
-
     interface_enigme = Interface("enigme")
 
     unite = round((368 - offset) / len(tableau) - offset)
@@ -614,7 +609,7 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
             Bouton(Vector3(392 + (unite + offset) * posx + offset, 40 +
                            (unite + offset) * posy + offset, 1), surf,
                    fonction=ajoute_valeur, data=([posx, posy, valeur], None),
-                                                 interface_nom='enigme')
+                   interface_nom='enigme')
 
     Bouton(Vector3(256, 376, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=lambda: appel('essai', {'valeur': solution_essai}), interface_nom='enigme')
