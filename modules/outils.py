@@ -262,12 +262,14 @@ class Noeud:
         for nom in prerequis:
             self.prerequis[nom] = False
             lie(lambda name=nom, **
-                _: set_dct(not 'non ' in prerequis, name, self.prerequis), nom)
+                _: set_dct(not 'non ' in prerequis, name[4:], self.prerequis),
+                nom if not 'non ' in nom else nom[4:])
 
         for nom in in_prerequis:
             self.prerequis[nom] = False
             lie(lambda name=nom, **_: set_dct(not 'non ' in in_prerequis,
-                                              name, self.in_prerequis), nom)
+                                              name[4:], self.in_prerequis),
+                                              nom if not 'non ' in nom else nom[4:])
 
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:

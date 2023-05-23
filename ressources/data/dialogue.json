@@ -1,188 +1,203 @@
 {
-    "noeuds": {
-        "A": "Vite, il faut sécuriser ce qu'on peut des fichiers de l'ordinateur ",
-        "B": "Commençons par les fichiers personnels",
-        "C": "Commençons par les fichiers critiques",
-        "D": "tapez la commande ls dans le terminal",
-        "E": "Mince, il va falloir passer la sécurité"
-    },
-    "relations": {
-        "A": {
-            "type": "random",
-            "end": [
-                "B",
-                "C"
-            ]
-        },
-        "B": {
-            "type": "exact",
-            "end": [
-                "BA"
-            ]
-        },
-        "C": {
-            "type": "exact",
-            "end": [
-                "CA"
-            ],
-            "triggers": [
-                "chemin"
-            ]
-        },
-        "BA": {
-            "type": "exact",
-            "end": [
-                "BB"
-            ],
-            "triggers": [
-                "chemin"
-            ]
-        },
-        "BB": {
-            "type": "exact",
-            "end": [
-                "ENDB"
-            ],
-            "triggers": [
-                "sequence"
-            ]
-            
-        },
-        "CA": {
-            "type": "exact",
-            "end": [
-                "CB"
-            ],
-            "triggers": [
-                "geometrique"
-            ]
-        },
-        "CB": {
-            "type": "exact",
-            "end": [
-                "ENDC"
-            ],
-            "triggers": [
-                "binomiale"
-            ]
-        },
-        "ENDB": {
+  "noeuds": {
+      "A": "Vite, il faut sécuriser ce qu'on peut des fichiers de l'ordinateur ",
+      "B": "Commençons par les fichiers personnels",
+      "BA": "",
+      "BB": "",
+      "C": "Commençons par les fichiers critiques",
+      "CA": "",
+      "CB": "",
+      "ENDB": "",
+      "ENDC": "",
+      "END1": "",
+      "D": "tapez la commande ls dans le terminal",
+      "E": "Mince, il va falloir passer la sécurité",
+      "F": "",
+      "G": "",
+      "END2": "",
+      "HA": "",
+      "HB": "",
+      "HC": "",
+      "HD": "",
+      "END": ""
+  },
+  "relations": {
+      "A": {
           "type": "random",
           "end": [
-            "CA",
-            "END1"
-          ],
-          "prerequis entrant": [
-            "non partie1"
+              "B",
+              "C"
           ]
-        },
-        "ENDC": {
-          "type": "random",
-          "end": [
-            "BA",
-            "END1"
-          ],
-          "prerequis entrant": [
-            "non partie1"
-          ]
-        },
-        "END1": {
-          "type": "random",
-          "end": [
-            "D",
-            "E",
-            "F",
-            "G"
-          ],
-          "triggers": [
-            "levelup"
-          ],
-          "prerequis entrant": [
-            "partie1"
-          ]
-        },
-        "D": {
+      },
+      "B": {
           "type": "exact",
           "end": [
-            "END2"
-          ],
-          "triggers": [
-            "chemin"
+              "BA"
           ]
-        },
-        "E": {
+      },
+      "C": {
           "type": "exact",
           "end": [
-            "END2"
+              "CA"
           ],
           "triggers": [
-            "sequence"
+              "chemin"
           ]
-        },
-        "F": {
+      },
+      "BA": {
           "type": "exact",
           "end": [
-            "END2"
+              "BB"
           ],
           "triggers": [
-            "geometrique"
+              "chemin"
           ]
-        },
-        "G": {
+      },
+      "BB": {
           "type": "exact",
           "end": [
-            "END2"
+              "ENDB"
           ],
           "triggers": [
-            "binomiale"
+              "sequence"
           ]
-        },
-        "END2": {
+          
+      },
+      "CA": {
           "type": "exact",
           "end": [
-            "HA"
+              "CB"
           ],
           "triggers": [
-            "levelup"
+              "geometrique"
           ]
-        },
-        "HA": {
+      },
+      "CB": {
           "type": "exact",
           "end": [
-            "HB"
+              "ENDC"
           ],
           "triggers": [
-            "geometrique"
+              "binomiale"
           ]
-        },
-        "HB": {
-          "type": "exact",
-          "end": [
-            "HB"
-          ],
-          "triggers": [
-            "sequence"
-          ]
-        },
-        "HC": {
-          "type": "exact",
-          "end": [
-            "HB"
-          ],
-          "triggers": [
-            "chemin"
-          ]
-        },
-        "HD": {
-          "type": "exact",
-          "end": [
-            "HB"
-          ],
-          "triggers": [
-            "binomiale"
-          ]
-        },
-        "END": {
-        }
-    }
+      },
+      "ENDB": {
+        "type": "random",
+        "end": [
+          "CA",
+          "END1"
+        ],
+        "prerequis entrant": [
+          "non partie1"
+        ]
+      },
+      "ENDC": {
+        "type": "random",
+        "end": [
+          "BA",
+          "END1"
+        ],
+        "prerequis entrant": [
+          "non partie1"
+        ]
+      },
+      "END1": {
+        "type": "random",
+        "end": [
+          "D",
+          "E",
+          "F",
+          "G"
+        ],
+        "triggers": [
+          "levelup"
+        ],
+        "prerequis entrant": [
+          "partie1"
+        ]
+      },
+      "D": {
+        "type": "exact",
+        "end": [
+          "END2"
+        ],
+        "triggers": [
+          "chemin"
+        ]
+      },
+      "E": {
+        "type": "exact",
+        "end": [
+          "END2"
+        ],
+        "triggers": [
+          "sequence"
+        ]
+      },
+      "F": {
+        "type": "exact",
+        "end": [
+          "END2"
+        ],
+        "triggers": [
+          "geometrique"
+        ]
+      },
+      "G": {
+        "type": "exact",
+        "end": [
+          "END2"
+        ],
+        "triggers": [
+          "binomiale"
+        ]
+      },
+      "END2": {
+        "type": "exact",
+        "end": [
+          "HA"
+        ],
+        "triggers": [
+          "levelup"
+        ]
+      },
+      "HA": {
+        "type": "exact",
+        "end": [
+          "HB"
+        ],
+        "triggers": [
+          "geometrique"
+        ]
+      },
+      "HB": {
+        "type": "exact",
+        "end": [
+          "HB"
+        ],
+        "triggers": [
+          "sequence"
+        ]
+      },
+      "HC": {
+        "type": "exact",
+        "end": [
+          "HB"
+        ],
+        "triggers": [
+          "chemin"
+        ]
+      },
+      "HD": {
+        "type": "exact",
+        "end": [
+          "HB"
+        ],
+        "triggers": [
+          "binomiale"
+        ]
+      },
+      "END": {
+      }
+  }
 }

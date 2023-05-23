@@ -75,6 +75,9 @@ def initialisation_jeux():
     BackGround(pygame.image.load(
         'ressources/img/background/desktop.jpg'), WINDOW, interface_nom='game')
 
+    lie(lambda: print('partie 1'), 'partie1')
+    lie(lambda: print('levelup'), 'levelup')
+
     enigmes.initialisation()
 
 
