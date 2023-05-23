@@ -13,6 +13,11 @@ from modules.graphics import (StaticElement, RelativePos, Draggable,
                               Bouton, Texte, Element)
 from modules.outils import appel, lie, vide, delie
 
+pygame.SRCALPHA: int
+pygame.K_s: int
+pygame.K_c: int
+pygame.K_r: int
+
 # chargement
 
 with open('ressources/data/difficulte.json', 'r', encoding='utf-8') as file:
@@ -88,26 +93,27 @@ class EnigmeGenerateur(ABC):
 
     def generate_solution(self) -> Any:
         """génère la solution"""
-        ...
+
 
     def generate(self) -> Any:
         """génère une séquence"""
-        ...
 
-    def comparaison(self, valeur: Any, solution: Any) -> bool:
+
+    def comparaison(self, _valeur: Any, _solution: Any) -> bool:
         """compare les résultats"""
-        ...
+
 
     @classmethod
     def create(cls) -> 'EnigmeGenerateur':
         """crée une instance du générateur selon la difficulté"""
-        ...
+
 
 
 class BinomialEnigme(EnigmeGenerateur):
     """génération d'énigme binomiale"""
 
     def __init__(self, profondeur: int, quantite: int) -> None:
+        super().__init__()
         self.quantite = quantite
         self.profondeur = profondeur
         self.parametre = {'entree': [
@@ -115,7 +121,8 @@ class BinomialEnigme(EnigmeGenerateur):
 
     def generate_solution(self) -> str:
         """génère la solution"""
-        return str(self.sequence(self.parametre['entree'] + [0] * (self.quantite - self.profondeur + 1))[-1])
+        return str(self.sequence(self.parametre['entree'] + [0] *
+                   (self.quantite - self.profondeur + 1))[-1])
 
     @staticmethod
     def sequence(entree: List[int]):
@@ -131,7 +138,7 @@ class BinomialEnigme(EnigmeGenerateur):
     def generate(self) -> List[float]:
         """génère la séquence de l'énigme"""
         return self.sequence(self.parametre['entree'] + [0] * (self.quantite - self.profondeur))
-    
+
     def comparaison(self, valeur: Any, solution: Any):
         """compare les résultats"""
         return valeur == solution
@@ -149,6 +156,7 @@ class SequentialEnigme(EnigmeGenerateur):
     """génération d'énigme séquentielle"""
 
     def __init__(self, quantite: int, mult: int, depart: int) -> None:
+        super().__init__()
         self.parametre = {'depart': depart, 'quantite': quantite,
                           'mult': 2 * mult + 1, 'div': 2}
         self.last_value: int
@@ -179,7 +187,7 @@ class SequentialEnigme(EnigmeGenerateur):
         """génère la solution"""
         return hex(SequentialEnigme.operation(self.last_value, self.parametre['mult'],
                                               self.parametre['div']))[2:]
-    
+
     def comparaison(self, valeur: Any, solution: Any):
         """compare les résultats"""
         return valeur == solution
@@ -238,14 +246,17 @@ def sequence_to_frame(sequence: List[str | float]):
                    (50, 50), pygame.SRCALPHA), fonction=texte_reponse.ajoute_lettre,
                interface_nom='enigme', data=(None, {'lettre': hex(value)[2:]}))
 
-    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
+    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1),
+                 nom='enigme', interface_nom='game')
 
 
 class GeometricCombinaison:
     """représentation des combinaisons géométriques"""
 
     shapes: List[pygame.Surface] = [DCT_SURFACE['carre'],
-                                    DCT_SURFACE['disque'], DCT_SURFACE['triangle'], DCT_SURFACE['rectangle']]
+                                    DCT_SURFACE['disque'],
+                                    DCT_SURFACE['triangle'],
+                                    DCT_SURFACE['rectangle']]
     remplissage: List[pygame.Surface] = [vert, rouge, orange]
 
     def __init__(self, coefficients: List[Tuple[int, int, int]]) -> None:
@@ -264,7 +275,8 @@ class GeometricCombinaison:
         surface_mask = pygame.mask.from_surface(surface)
         surface_mask.erase(transparent_mask, (0, 0))
 
-        return surface_mask.to_surface(surface=pygame.Surface(surface_mask.get_size(), pygame.SRCALPHA),
+        return surface_mask.to_surface(surface=pygame.Surface(surface_mask.get_size(),
+                                                              pygame.SRCALPHA),
                                        setsurface=surface, unsetcolor=None)
 
     def get_surface(self):
@@ -274,7 +286,8 @@ class GeometricCombinaison:
         for ind, tpl in enumerate(self.coefficients):
             surf = self.intersect(GeometricCombinaison.shapes[tpl[0]],
                                   GeometricCombinaison.remplissage[tpl[1]])
-            if GeometricCombinaison.shapes[tpl[0]] not in (DCT_SURFACE['carre'], DCT_SURFACE['disque']):
+            if GeometricCombinaison.shapes[tpl[0]] not in (DCT_SURFACE['carre'],
+                                                           DCT_SURFACE['disque']):
                 surf = pygame.transform.rotate(surf, tpl[2] * 90)
 
             if surface.get_width() == 0:
@@ -300,7 +313,8 @@ class GeometricCombinaison:
 
         intersection = mask1.overlap_mask(mask2, (0, 0))
 
-        return intersection.to_surface(surface=pygame.Surface(intersection.get_size(), pygame.SRCALPHA),
+        return intersection.to_surface(surface=pygame.Surface(intersection.get_size(),
+                                                              pygame.SRCALPHA),
                                        setsurface=remplissage, unsetcolor=None)
 
 
@@ -310,6 +324,7 @@ class GeometricEnigme(EnigmeGenerateur):
     difficulte_ind = ['difficile', 'intermediaire', 'simple']
 
     def __init__(self, size: int) -> None:
+        super().__init__()
         self.shape_variation = [random.randint(0, len(GeometricCombinaison.shapes) - 1),
                                 random.randint(0, len(GeometricCombinaison.shapes) - 1)]
 
@@ -341,11 +356,16 @@ class GeometricEnigme(EnigmeGenerateur):
             coefficients: List[Tuple[int, int, int]] = []
 
             for indx in range(3):
-                new_shape = (self.valeur_initiales[indx][0] + self.shape_variation[0] * (ind % self.size)
-                             + self.shape_variation[1] * (ind // self.size)) % len(GeometricCombinaison.shapes)
-                new_remplissage = (self.valeur_initiales[indx][1] + self.filling_variation[0] * (ind % self.size)
-                                   + self.filling_variation[1] * (ind // self.size)) % len(GeometricCombinaison.remplissage)
-                new_rotation = (self.valeur_initiales[indx][2] + self.rotation_variation[0] * (ind % self.size)
+                new_shape = (self.valeur_initiales[indx][0] +
+                             self.shape_variation[0] * (ind % self.size)
+                             + self.shape_variation[1] *
+                             (ind // self.size)) % len(GeometricCombinaison.shapes)
+                new_remplissage = (self.valeur_initiales[indx][1] + self.filling_variation[0] *
+                                   (ind % self.size)
+                                   + self.filling_variation[1] *
+                                   (ind // self.size)) % len(GeometricCombinaison.remplissage)
+                new_rotation = (self.valeur_initiales[indx][2] + self.rotation_variation[0] *
+                                (ind % self.size)
                                 + self.rotation_variation[1] * (ind // self.size)) % 4
 
                 coefficients.append((new_shape, new_remplissage, new_rotation))
@@ -357,14 +377,16 @@ class GeometricEnigme(EnigmeGenerateur):
         coefficients: List[List[int]] = []
 
         for indx in range(3):
-            shape = (self.valeur_initiales[indx][0] + self.shape_variation[0] * ((self.size ** 2 - 1)
-                                                                                 % self.size)
+            shape = (self.valeur_initiales[indx][0] + self.shape_variation[0] *
+                     ((self.size ** 2 - 1) % self.size)
+
                      + self.shape_variation[1] * ((self.size ** 2 - 1)
                                                   // self.size)) % len(GeometricCombinaison.shapes)
-            remplissage = (self.valeur_initiales[indx][1] + self.filling_variation[0] *
+            remplissage = ((self.valeur_initiales[indx][1] + self.filling_variation[0] *
                            ((self.size ** 2 - 1) % self.size)
                            + self.filling_variation[1] *
-                           ((self.size ** 2 - 1) // self.size)) % len(GeometricCombinaison.remplissage)
+                           ((self.size ** 2 - 1) // self.size))
+                           % len(GeometricCombinaison.remplissage))
 
             rotation = (self.valeur_initiales[indx][2] + self.rotation_variation[0] *
                         ((self.size ** 2 - 1) % self.size)
@@ -406,7 +428,7 @@ class GeometricEnigme(EnigmeGenerateur):
         """génère la solution"""
         solution = self.calcule_solution()
         return self.filtre(solution)
-    
+
     def comparaison(self, valeur: Any, solution: Any):
         """compare les résultats"""
         return valeur == solution
@@ -444,7 +466,8 @@ def geometrique_to_frame(tableau: List[List[Tuple[int, int, int]]]):
     Brique(Vector3(32 + 71, 32 + 192, 2, aligne='centre'), unite, 'enigme')
     Brique(Vector3(32 + 71, 32 + 288, 2, aligne='centre'), unite, 'enigme')
 
-    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
+    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1),
+                 nom='enigme', interface_nom='game')
 
 
 class ListeValidation:
@@ -456,8 +479,9 @@ class ListeValidation:
 
         self.pos = pos
         self.backup_surface = surface.copy()
-        self.element = Element(self, surface, surface.get_rect(), interface_nom)
-    
+        self.element = Element(
+            self, surface, surface.get_rect(), interface_nom)
+
     def calc_surf(self):
         """calcule la surface"""
         # vertical
@@ -469,14 +493,15 @@ class ListeValidation:
         unite = round((surface.get_height() - offset) / nombre - offset)
 
         for num, valeur in enumerate(self.listeur):
-            surf = POLICE.render(str(valeur), True, '#32E024' if valeur in self.listand else '#000000')
+            surf = POLICE.render(
+                str(valeur), True, '#32E024' if valeur in self.listand else '#000000')
             rect = surf.get_rect()
             rect.centerx = surface.get_width() // 2
             rect.top = offset + (unite + offset) * num
             surface.blit(surf, rect)
-        
+
         return surface
-    
+
     def update(self):
         """mise à jour"""
         self.element.elm_infos['surface'] = self.calc_surf()
@@ -488,6 +513,7 @@ class PathEnigme(EnigmeGenerateur):
     DIFFICULTE_IND = ['simple', 'intermediaire', 'difficile']
 
     def __init__(self, size: int, path_size: int) -> None:
+        super().__init__()
         self.size = size
         self.path_size = path_size
         self.solution, self.sequence = self.generate_path()
@@ -536,9 +562,10 @@ class PathEnigme(EnigmeGenerateur):
 
     def generate_solution(self) -> Any:
         """génère une solution"""
-        return [(valeur, self.solution[indice + 1]) if indice % 2 else (self.solution[indice + 1], valeur)
+        return [(valeur, self.solution[indice + 1]) if indice % 2 else
+                (self.solution[indice + 1], valeur)
                 for indice, valeur in enumerate(self.solution[:-1])]
-    
+
     def comparaison(self, valeur: Any, solution: Any):
         """compare les résultats"""
         # on fait toutes les comparaisons nécessaires aux vérifications de validité
@@ -546,7 +573,7 @@ class PathEnigme(EnigmeGenerateur):
                    self.tableau[solution[indice][1]][solution[indice][0]] and
                    (indice == 0 or (position[0] == valeur[indice - 1][0]
                     if indice % 2 else position[1] == valeur[indice - 1][1]))
-                   for indice, position in enumerate(valeur)) # type: ignore
+                   for indice, position in enumerate(valeur))  # type: ignore
 
     @classmethod
     def create(cls) -> 'PathEnigme':
@@ -573,32 +600,33 @@ def path_to_frame(serie: Tuple[List[int], List[List[str]]]):
     sequence, tableau = serie
     sequence = [hex(valeur)[2:] for valeur in sequence]
 
-    nombre = len(tableau)
     offset = 10 + 20 * GeometricEnigme.difficulte_ind.index(DIFFICULTE_NV)
 
-    taille_surface = 368
 
     interface_enigme = Interface("enigme")
 
-    background = DCT_SURFACE['background_chemin']
-    unite = round((taille_surface - offset) / nombre - offset)
+    unite = round((368 - offset) / len(tableau) - offset)
 
     for posy, liste in enumerate(tableau):
         for posx, valeur in enumerate(liste):
             surf = POLICE.render(valeur, True, '#000000')
 
-            Bouton(Vector3(392 + (unite + offset) * posx + offset, 40 + (unite + offset) * posy + offset, 1), surf,
-                   fonction=ajoute_valeur, data=([posx, posy, valeur], None), interface_nom='enigme')
+            Bouton(Vector3(392 + (unite + offset) * posx + offset, 40 +
+                           (unite + offset) * posy + offset, 1), surf,
+                   fonction=ajoute_valeur, data=([posx, posy, valeur], None),
+                                                 interface_nom='enigme')
 
     Bouton(Vector3(256, 376, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=lambda: appel('essai', {'valeur': solution_essai}), interface_nom='enigme')
 
     Bouton(Vector3(256, 24, 1), pygame.Surface((48, 48), pygame.SRCALPHA),
            fonction=nettoie, interface_nom='enigme')
-    
-    ListeValidation(Vector3(40, 40, 1), (sequence, sequence_essai), pygame.Surface((128, 368), pygame.SRCALPHA), 'enigme')
 
-    return Frame(interface_enigme, background, RelativePos(0.5, 0.5, 1), nom='enigme', interface_nom='game')
+    ListeValidation(Vector3(40, 40, 1), (sequence, sequence_essai),
+                    pygame.Surface((128, 368), pygame.SRCALPHA), 'enigme')
+
+    return Frame(interface_enigme, DCT_SURFACE['background_chemin'], RelativePos(0.5, 0.5, 1),
+                 nom='enigme', interface_nom='game')
 
 
 class Enigme:
@@ -606,12 +634,13 @@ class Enigme:
 
     current_enigme: 'None | Enigme' = None
 
-    def __init__(self, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]) -> None:
+    def __init__(self, generateur: EnigmeGenerateur,
+                 sequence_to_frame_function: Callable[[Any], Frame]) -> None:
         self.generateur = generateur
         self.serie = generateur.generate()
         self.solution = generateur.generate_solution()
 
-        self.frame = sequence_to_frame(self.serie)
+        self.frame = sequence_to_frame_function(self.serie)
 
         lie(self.essai, 'essai')
 
@@ -631,8 +660,10 @@ class Enigme:
         return True
 
     @classmethod
-    def create(cls, generateur: EnigmeGenerateur, sequence_to_frame: Callable[[Any], Frame]):
-        cls.current_enigme = cls(generateur.create(), sequence_to_frame)
+    def create(cls, generateur: EnigmeGenerateur,
+               sequence_to_frame_function: Callable[[Any], Frame]):
+        """crée l'objet"""
+        cls.current_enigme = cls(generateur.create(), sequence_to_frame_function)
 
 
 class Brique(Draggable):
@@ -687,7 +718,11 @@ class Brique(Draggable):
                     ...
 
     def on_declick(self, event: pygame.event.Event):
+<<<<<<< Updated upstream
         """déclique"""
+=======
+        """déselectionne la figure"""
+>>>>>>> Stashed changes
         super().on_declick(event)
         self.stack()
 
@@ -705,7 +740,7 @@ class Brique(Draggable):
                 self.coefficient = elm.coefficient + self.coefficient
                 a_detruire.append(elm)
 
-        while len(a_detruire):
+        while len(a_detruire) != 0:
             a_detruire.pop(0).destroy()
 
     def update(self):
@@ -736,6 +771,9 @@ class DropZone:
                 appel('essai', {'valeur': elm.coefficient})
                 return
 
+    def nothing(self):
+        """absolument rien tkt c'est pep8"""
+
 
 def initialisation():
     """intialisation"""
@@ -749,7 +787,7 @@ def initialisation():
 
     DCT_SURFACE['background_numerique'] = pygame.image.load(
         path_numerique).convert_alpha()
-    
+
     DCT_SURFACE['background_chemin'] = pygame.image.load(
         path_chemin).convert_alpha()
 
