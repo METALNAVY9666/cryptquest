@@ -338,7 +338,8 @@ class Frame:
         self.rect = self.surface.get_rect()
         self.pos = pos
         self.interface = interface
-        self.element = Element(self, surface, self.rect, args.get('interface_nom'))
+        self.element = Element(self, surface, self.rect,
+                               args.get('interface_nom'))
         nom = args.get('nom', 'sans_nom')
         if nom not in Frame.frames:
             self.nom = nom
@@ -351,7 +352,7 @@ class Frame:
             # on active la frame mise à jour
             backup = Frame.current_frame
             Frame.current_frame = self
-            # type: ignore
+
             Frame.current_tl_pos.xy += Vector3(
                 *self.element.elm_infos['rect'].topleft, 0).xy
 
@@ -360,7 +361,7 @@ class Frame:
 
             # on désactive la frame mise à jour
             Frame.current_frame = backup
-            # type: ignore
+
             Frame.current_tl_pos.xy -= Vector3(
                 *self.element.elm_infos['rect'].topleft, 0).xy
         return tracer
@@ -475,7 +476,7 @@ class Bouton:
     def __init__(self, pos: Vector3 | RelativePos,
                  surface: pygame.Surface, *, interface_nom: str,
                  data: Tuple[List[Any] | None,
-                 Dict[str, Any] | None] = (None, None), **args: Any) -> None:
+                             Dict[str, Any] | None] = (None, None), **args: Any) -> None:
         self.pos = pos
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
@@ -492,7 +493,6 @@ class Bouton:
         self.nkdata = data[0] if data[0] is not None else []
         self.kdata = data[1] if data[1] is not None else {}
 
-
     def on_click(self, event: pygame.event.Event):
         """active lors du clique"""
         if self.click == event.button:
@@ -502,10 +502,12 @@ class Bouton:
 class Texte:
     """gestion des textes"""
 
-    def __init__(self, pos: Vector3 | RelativePos, interface_nom: str | None = None, **kwargs: Any) -> None:
+    def __init__(self, pos: Vector3 | RelativePos,
+                 interface_nom: str | None = None, **kwargs: Any) -> None:
         self.texte = kwargs.get('texte', '')
         self.pos = pos
-        self.police, self.color = kwargs.get('police', POLICE), kwargs.get('couleur', '#FFFFFF')
+        self.police, self.color = kwargs.get(
+            'police', POLICE), kwargs.get('couleur', '#FFFFFF')
         surface = self.police.render(self.texte, True, self.color)
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
@@ -541,7 +543,7 @@ class Draggable:
             self.pos.z += 1
             self.element.elm_infos['interface'].resort(self.element)
 
-    def on_declick(self, event: pygame.event.Event):
+    def on_declick(self, _: pygame.event.Event):
         """gestion du relachement du clique"""
         self.state = 0
         self.pos.z -= 1
