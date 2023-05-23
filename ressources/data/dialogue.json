@@ -10,37 +10,179 @@
         "A": {
             "type": "random",
             "end": [
+                "B",
                 "C"
             ]
         },
         "B": {
             "type": "exact",
             "end": [
-                "D"
+                "BA"
             ]
         },
         "C": {
             "type": "exact",
             "end": [
-                "D"
+                "CA"
             ],
             "triggers": [
                 "chemin"
             ]
         },
-        "D": {
+        "BA": {
             "type": "exact",
             "end": [
-                "E"
+                "BB"
             ],
-            "prerequis": [
-                "test"
+            "triggers": [
+                "chemin"
             ]
         },
-        "E": {
+        "BB": {
+            "type": "exact",
+            "end": [
+                "ENDB"
+            ],
             "triggers": [
                 "sequence"
             ]
+            
+        },
+        "CA": {
+            "type": "exact",
+            "end": [
+                "CB"
+            ],
+            "triggers": [
+                "geometrique"
+            ]
+        },
+        "CB": {
+            "type": "exact",
+            "end": [
+                "ENDC"
+            ],
+            "triggers": [
+                "binomiale"
+            ]
+        },
+        "ENDB": {
+          "type": "random",
+          "end": [
+            "CA",
+            "END1"
+          ],
+          "prerequis entrant": [
+            "non partie1"
+          ]
+        },
+        "ENDC": {
+          "type": "random",
+          "end": [
+            "BA",
+            "END1"
+          ],
+          "prerequis entrant": [
+            "non partie1"
+          ]
+        },
+        "END1": {
+          "type": "random",
+          "end": [
+            "D",
+            "E",
+            "F",
+            "G"
+          ],
+          "triggers": [
+            "levelup"
+          ],
+          "prerequis entrant": [
+            "partie1"
+          ]
+        },
+        "D": {
+          "type": "exact",
+          "end": [
+            "END2"
+          ],
+          "triggers": [
+            "chemin"
+          ]
+        },
+        "E": {
+          "type": "exact",
+          "end": [
+            "END2"
+          ],
+          "triggers": [
+            "sequence"
+          ]
+        },
+        "F": {
+          "type": "exact",
+          "end": [
+            "END2"
+          ],
+          "triggers": [
+            "geometrique"
+          ]
+        },
+        "G": {
+          "type": "exact",
+          "end": [
+            "END2"
+          ],
+          "triggers": [
+            "binomiale"
+          ]
+        },
+        "END2": {
+          "type": "exact",
+          "end": [
+            "HA"
+          ],
+          "triggers": [
+            "levelup"
+          ]
+        },
+        "HA": {
+          "type": "exact",
+          "end": [
+            "HB"
+          ],
+          "triggers": [
+            "geometrique"
+          ]
+        },
+        "HB": {
+          "type": "exact",
+          "end": [
+            "HB"
+          ],
+          "triggers": [
+            "sequence"
+          ]
+        },
+        "HC": {
+          "type": "exact",
+          "end": [
+            "HB"
+          ],
+          "triggers": [
+            "chemin"
+          ]
+        },
+        "HD": {
+          "type": "exact",
+          "end": [
+            "HB"
+          ],
+          "triggers": [
+            "binomiale"
+          ]
+        },
+        "END": {
         }
     }
 }

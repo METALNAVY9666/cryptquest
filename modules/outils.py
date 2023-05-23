@@ -54,7 +54,7 @@ def set_dct(valeur: Any, clef: str, dct: Dict[str, Any]):
 class Editeur:
     """classe de représentation d'un texte"""
 
-    def __init__(self, pos: Vector3, text:dict,
+    def __init__(self, pos: Vector3, text: dict,
                  maxi: dict, interface_nom: str | None = None) -> None:
         # texte: str, police: pygame.font.Font
         self.owner: Any | None = None
@@ -151,14 +151,16 @@ class Editeur:
                 # si on a atteint la position du curseur
                 # on sauvegarde sa position
                 if curseur_compteur == self.curseur["public"]:
-                    var["curseur"]["pos"] = [somme, (line + lines_sup) * var["height"]]
+                    var["curseur"]["pos"] = [
+                        somme, (line + lines_sup) * var["height"]]
 
             var["textures"].append(self.police.render(
                 textes[line][var["char ind start"]:], True, '#4AF626'))
             var["char ind start"] = 0
             curseur_compteur += 1
             if curseur_compteur == self.curseur["public"]:
-                var["curseur"]["pos"] = [0, (line + lines_sup + 1) * var["height"]]
+                var["curseur"]["pos"] = [
+                    0, (line + lines_sup + 1) * var["height"]]
 
         surface = pygame.Surface((max(texture.get_width() for texture in var["textures"]) + 2,
                                   self.max["lines"] * var["height"]))
@@ -170,8 +172,9 @@ class Editeur:
                 surface.blit(
                     texture,
                     (0,
-                        var["height"] * (self.max["lines"] - len(var["textures"]) + line)
-                    )
+                        var["height"] * (self.max["lines"] -
+                                         len(var["textures"]) + line)
+                     )
                 )
             else:
                 surface.blit(texture, (0, var["height"] * line))
@@ -194,8 +197,8 @@ class BackGround:
     """gestion de l'arrière plan"""
 
     def __init__(self, surface: pygame.Surface, surface_of: pygame.Surface,
-                pos: Vector3 = Vector3(0, 0, 0),
-                interface_nom: str | None = None) -> None:
+                 pos: Vector3 = Vector3(0, 0, 0),
+                 interface_nom: str | None = None) -> None:
         self.pos = pos
         self.surface_of = surface_of
         self.element = StaticElement(self, surface, interface_nom)
@@ -204,7 +207,6 @@ class BackGround:
         """renvoie la surface sur fond"""
         return pygame.transform.smoothscale(
             self.element.elm_infos["surface"], self.surface_of.get_size())
-
 
     def update(self):
         """mise à jour"""
@@ -253,17 +255,19 @@ class Noeud:
         self.children = [Noeud.get_by_nom(enfant) for enfant in enfants]
 
     def set_mode(self, mode: str, in_prerequis: List[str],
-        prerequis: List[str], triggers: List[str]):
+                 prerequis: List[str], triggers: List[str]):
         """change le mode de sélection du noeud suivant"""
         self.mode = mode
 
         for nom in prerequis:
             self.prerequis[nom] = False
-            lie(lambda **_: set_dct(True, nom, self.prerequis), nom)
+            lie(lambda name=nom, **
+                _: set_dct(not 'non ' in prerequis, name, self.prerequis), nom)
 
         for nom in in_prerequis:
             self.prerequis[nom] = False
-            lie(lambda **_: set_dct(True, nom, self.in_prerequis), nom)
+            lie(lambda name=nom, **_: set_dct(not 'non ' in in_prerequis,
+                                              name, self.in_prerequis), nom)
 
         # les triggers déclenche les événements de type None -> None
         for nom in triggers:
@@ -274,7 +278,8 @@ class Noeud:
         # cas particulier lié au jeu
         if any(val in self.triggers for val in ('binomiale', 'geometrique', 'sequence', 'chemin')):
             self.prerequis['enigme_resolu'] = False
-            lie(lambda **_: set_dct(True, 'enigme_resolu', self.prerequis), 'enigme_resolu')
+            lie(lambda **_: set_dct(True, 'enigme_resolu',
+                self.prerequis), 'enigme_resolu')
 
         # on active les triggers du noeud enfant
         for nom in self.triggers:
