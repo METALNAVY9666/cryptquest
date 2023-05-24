@@ -567,6 +567,7 @@ class PathEnigme(EnigmeGenerateur):
 
     @classmethod
     def create(cls) -> 'PathEnigme':
+        """crée un objet PathEnigme"""
         return cls(Enigme.difficulte_nv * 2 + 3, Enigme.difficulte_nv * 2 + 3)
 
 
@@ -757,7 +758,6 @@ class DropZone:
         self.pos = pos
         surface = pygame.Surface(
             (size, size), pygame.SRCALPHA)
-        surface.fill('#156531')
         self.element = StaticElement(self, surface, interface_nom)
 
     def update(self):

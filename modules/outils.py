@@ -265,13 +265,13 @@ class Noeud:
             lie(lambda name=prerequis_nom, dct=self.prerequis,
                 **_: set_dct(not self.prerequis[prerequis_nom], name, dct),  # type: ignore
                 prerequis_nom)
-            lie(lambda name=prerequis_nom, dct=self.prerequis,
-                **_: print(not self.prerequis[prerequis_nom], name, dct),  # type: ignore
-                prerequis_nom)
 
         for nom in in_prerequis:
             prerequis_nom = nom if 'non ' not in nom else nom[4:]
             self.in_prerequis[prerequis_nom] = 'non ' in nom
+            lie(lambda name=prerequis_nom, dct=self.in_prerequis,
+                **_: set_dct(not self.in_prerequis[prerequis_nom], name, dct),  # type: ignore
+                prerequis_nom)
 
         # les triggers déclenche les événements de type None -> None
         for nom in triggers[0]:
@@ -298,7 +298,7 @@ class Noeud:
         if 'enigme_resolu' in self.prerequis:
             vide('enigme_resolu')
 
-        # on active les triggers du noeud enfant
+        # on active les triggers du noeud
         for nom in self.triggers[1]:
             appel(nom, {})
 
