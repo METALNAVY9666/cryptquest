@@ -51,7 +51,7 @@ class Shell:
                 self.commandes[commande](*param)
             except TypeError:
                 if random.randint(0, 9) == 7:
-                    self.texte.ajoute_texte("   lis la doc stp")
+                    self.texte.ajoute_texte("   lis le help stp")
                 else:
                     self.texte.ajoute_texte("   paramètres erronés\n")
 
@@ -102,12 +102,18 @@ class Reseau:
         self.machines: List[str] = []
         self.texte = texte
 
+        self.state = False
+
         # visualisation de l'argent
         self.element = Texte(pos, police=pygame.font.SysFont('Arial', 35, True), couleur='#c521de',
                              texte='0€', interface_nom=interface_nom)
 
     def scan(self):
         """simule un scan du réseau"""
+        if self.state:
+            self.texte.ajoute_texte('  Machine infectée, accès réseau coupé\n')
+            return
+
         self.machines.clear()
         nb_machines = random.randint(0, 5)
         for _ in range(nb_machines):
@@ -139,7 +145,11 @@ class Reseau:
         else:
             self.texte.ajoute_texte(
                 'infection désastreuse, votre machine est contaminée\n')
-            appel('lancement', {})
+            self.texte.ajoute_texte(
+                "Rendez-vous sur l'application de sécurité\n")
+            if not self.state:
+                appel('lancement', {})
+                self.state = 1
 
 
 # fonctions
