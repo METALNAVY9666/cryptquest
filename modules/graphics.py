@@ -506,9 +506,11 @@ class Texte:
                  interface_nom: str | None = None, **kwargs: Any) -> None:
         self.texte = kwargs.get('texte', '')
         self.pos = pos
-        self.police, self.color = kwargs.get(
-            'police', POLICE), kwargs.get('couleur', '#FFFFFF')
-        surface = self.police.render(self.texte, True, self.color)
+        self.writing = (kwargs.get(
+            'police', POLICE), kwargs.get('couleur', '#FFFFFF'))
+        self.surface = kwargs.get(
+            'surface', pygame.Surface((0, 0), pygame.SRCALPHA))
+        surface = self.writing[0].render(self.texte, True, self.writing[1])
         self.element = Element(
             self, surface, surface.get_rect(), interface_nom)
 
@@ -518,8 +520,13 @@ class Texte:
 
     def update(self):
         """fonction de mise à jour"""
-        self.element.elm_infos["surface"] = self.police.render(
-            self.texte, True, self.color)
+        self.element.elm_infos["surface"] = self.writing[0].render(
+            self.texte, True, self.writing[1])
+
+        surf = pygame.transform.scale(
+            self.surface, self.element.elm_infos["surface"].get_size())
+        surf.blit(self.element.elm_infos["surface"], (0, 0))
+        self.element.elm_infos["surface"] = surf
         self.element.elm_infos["rect"] = self.element.elm_infos["surface"].get_rect(
         )
 

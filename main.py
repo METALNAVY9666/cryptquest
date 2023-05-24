@@ -3,7 +3,7 @@
 from typing import List
 import pygame
 from modules.graphics import POLICE, Interface, Bouton, RelativePos, Vector3
-from modules.applications import Shell, load_dialogue, Reseau, Dialogue, Noeud, aide
+from modules.applications import Shell, load_dialogue, Reseau, Dialogue, Noeud, aide, tutoriel
 from modules.outils import (BackGround, KeyBoardListener, Editeur, appel, lie)
 
 from modules import enigmes
@@ -43,7 +43,7 @@ def initialisation_shell():
 
     BackGround(pygame.Surface((10, 10)), WINDOW, interface_nom='shell')
 
-    maxs = {"width": 600, "lines": 22}
+    maxs = {"width": 700, "lines": 22}
     text = {"text": '', "font": POLICE}
     texte = Editeur(Vector3(100, 50, 1), text, maxs, 'shell')
     reseau = Reseau(texte, RelativePos(1, 0, 1, aligne='topright'), 'shell')
@@ -51,7 +51,8 @@ def initialisation_shell():
                                  'reset': lambda: appel('reset', {}),
                                  'scan': reseau.scan,
                                  'hack': reseau.hack,
-                                 'help': lambda: aide(texte)})
+                                 'help': lambda: aide(texte),
+                                 'tutoriel': lambda: tutoriel(texte)})
 
     KeyBoardListener(
         {pygame.K_ESCAPE: lambda: Interface.change_interface('bureau')}, 'shell')
@@ -60,7 +61,10 @@ def initialisation_shell():
 def initialisation_jeux():
     """initialisation du coeur principale"""
     lie(lambda: Dialogue(RelativePos(0.5, 1, 1, aligne='bottom'),
-                         Noeud.get_by_nom('A'), POLICE, 'game'), 'lancement')
+                         Noeud.get_by_nom('A'),
+                         (pygame.image.load(
+                             'ressources/img/background/dialogue.png').convert_alpha(),
+        POLICE), 'game'), 'lancement')
 
     Interface('game')
 

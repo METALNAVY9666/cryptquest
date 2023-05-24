@@ -2,7 +2,7 @@
 
 import json
 import random
-from typing import Any, Callable, Dict, List, TextIO
+from typing import Any, Callable, Dict, List, TextIO, Tuple
 
 import pygame
 
@@ -66,11 +66,10 @@ class Dialogue:
 
     # ajout d'une surface de fond
     def __init__(self, pos: Vector3 | RelativePos, noeud: Noeud,
-                 police: pygame.font.Font, interface_nom: str) -> None:
+                 surf_info: Tuple[pygame.Surface, pygame.font.Font], interface_nom: str) -> None:
         self.noeud = noeud
-        self.texte = Texte(pos, police=police, couleur='#FFFFFF',
+        self.texte = Texte(pos, police=surf_info[1], surface=surf_info[0], couleur='#FFFFFF',
                            texte=self.noeud.valeur, interface_nom=interface_nom)
-
         self.bouton = self.init_button(pos, interface_nom)
 
     def init_button(self, pos: Vector3 | RelativePos, interface_nom: str) -> Bouton:
@@ -172,14 +171,16 @@ def load_dialogue(dialogue_file: TextIO):
         ]
         in_prerequis: List[str] = (relations["prerequis entrant"]
                                    if "prerequis entrant" in relations else [])
-        in_triggers: List[str] = relations["triggers"] if "triggers" in relations else []
+        in_triggers: List[str] = relations["triggers"] if "triggers" in relations else [
+        ]
         out_triggers: List[str] = (relations["triggers sortants"]
                                    if "triggers sortants" in relations else [])
         end: List[str] = relations['end'] if "end" in relations else []
         typ: str = relations['type'] if "end" in relations else "exact"
 
         noeud.set_enfant(end)
-        noeud.set_mode(typ, in_prerequis, prerequis, (in_triggers, out_triggers))
+        noeud.set_mode(typ, in_prerequis, prerequis,
+                       (in_triggers, out_triggers))
 
 
 def aide(texte: Editeur):
@@ -188,7 +189,19 @@ def aide(texte: Editeur):
     texte.ajoute_texte(
         "    hack -ip <= tente de voler les données d'une machine\n")
     texte.ajoute_texte("    help <= affiche l'aide\n")
-    texte.ajoute_texte("    ls <= complète un événement\n")
+    texte.ajoute_texte("    reset <= réinitialise les formes géométriques\n")
     texte.ajoute_texte('    scan <= scan le réseau\n')
     texte.ajoute_texte("    tutoriel <= lance le tutoriel\n")
-    texte.ajoute_texte("    reset <= réinitialise les formes géométriques\n")
+
+
+def tutoriel(editeur: Editeur):
+    """joue le tutoriel"""
+    texte = ("cliquez sur les textes de dialogues pour passer au suivant\n" +
+             "le but est de résoudre les énigmes pour sauver l'ordinateur\n" +
+             "Pour les énigmes de type géométrique, si vous avez un doute, laissez un carré\n" +
+             "Pour les énigmes de type chemin, le but est " +
+             "de passer par toutes les valeurs indiquées\n" +
+             "en alternant lignes et colonnes, en commençant par une colonne")
+
+    for ligne in texte.split('\n'):
+        editeur.ajoute_texte('  ' + ligne + '\n')
